@@ -24,7 +24,6 @@ namespace Camera
         public MainWindow()
         {
             InitializeComponent();
-            CameraImage.GetHicon();
             DataContext = viewModel;
         }
     }

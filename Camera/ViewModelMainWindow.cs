@@ -18,6 +18,7 @@ using System.Drawing;
 using MvCamCtrl.NET;
 using System.Runtime.InteropServices;
 using System.Windows.Threading;
+using System.Windows.Media.Imaging;
 
 namespace Camera
 {
@@ -27,17 +28,25 @@ namespace Camera
         private MyCamera myCamera = new MyCamera();
         private MyCamera.MV_CC_DEVICE_INFO_LIST m_stDeviceList = new MyCamera.MV_CC_DEVICE_INFO_LIST();
         private Thread m_hReceiveThread = null;
-        private readonly Dispatcher dispatcher;
         private string strUserDefinedName = "";
         private string feedback;
         private int deviceIndex = 0;
         private int nRet;
-        private ConnectionStatus сonnectionStatus = ConnectionStatus.Unknown;
+        private bool isGrabbing = false;       
 
-        private bool isGrabbing = false;        // Whether it is grabbing image
-        private bool isRecord = false;          // Whether it is recording
+        private BitmapSource inImg;
 
-        public ConnectionStatus ConnectionStatus { get => сonnectionStatus; }
+        public BitmapSource InImg
+        {
+            get => inImg;
+            set
+            {
+                inImg = value;
+                OnPropertyChanged();
+            }
+        }
+
+
         public int DeviceIndex
         {
             get => deviceIndex;
@@ -77,7 +86,7 @@ namespace Camera
             DeviceCollection = new ObservableCollection<string>();
             SearchDeviceCommand = new DelegateCommands(SearchDevice);
             OpenDeviceCommand = new DelegateCommands(OpenDevice);
-            CloseDeviceCommand = new DelegateCommands(ClosenDevice);
+            //CloseDeviceCommand = new DelegateCommands(ClosenDevice);
             StartGrabCommand = new DelegateCommands(StartGrab);
             StopGrabCommand = new DelegateCommands(StopGrab);
         }
@@ -176,22 +185,21 @@ namespace Camera
 
             myCamera.MV_CC_SetEnumValue_NET("AcquisitionMode", (uint)MyCamera.MV_CAM_ACQUISITION_MODE.MV_ACQ_MODE_CONTINUOUS);
             myCamera.MV_CC_SetEnumValue_NET("TriggerMode", (uint)MyCamera.MV_CAM_TRIGGER_MODE.MV_TRIGGER_MODE_OFF);
-
-            SwitchConnectionStatus(ConnectionStatus.Connect);
+            Feedback = "Device Open";
         }
 
-        private void ClosenDevice(object parameter)
-        {
-            if (isGrabbing == true)
-            {
-                //StopGrab();
-            }
+        //private void ClosenDevice(object parameter)
+        //{
+        //    if (isGrabbing == true)
+        //    {
+        //        StopGrab();
+        //    }
 
-            myCamera.MV_CC_CloseDevice_NET();
-            myCamera.MV_CC_DestroyDevice_NET();
+        //    myCamera.MV_CC_CloseDevice_NET();
+        //    myCamera.MV_CC_DestroyDevice_NET();
 
-            SwitchConnectionStatus(ConnectionStatus.Disconnect);
-        }
+        //    SwitchConnectionStatus(ConnectionStatus.Disconnect);
+        //}
 
         public void ReceiveThreadProcess()
         {
@@ -206,18 +214,13 @@ namespace Camera
                 nRet = myCamera.MV_CC_GetImageBuffer_NET(ref stFrameInfo, 1000);
                 if (nRet == MyCamera.MV_OK)
                 {
-                    IntPtr hWnd = IntPtr.Zero;
-                    Dispatcher.Invoke(new Action(() =>
-                    {
-                        hWnd 
-                    }));
+                    int width = stFrameInfo.stFrameInfo.nWidth;
+                    int height = stFrameInfo.stFrameInfo.nHeight;
 
-                    stDisplayInfo.hWnd = hWnd;
-                    stDisplayInfo.pData = stFrameInfo.pBufAddr;
-                    stDisplayInfo.nDataLen = stFrameInfo.stFrameInfo.nFrameLen;
-                    stDisplayInfo.nWidth = stFrameInfo.stFrameInfo.nWidth;
-                    stDisplayInfo.nHeight = stFrameInfo.stFrameInfo.nHeight;
-                    stDisplayInfo.enPixelType = stFrameInfo.stFrameInfo.enPixelType;
+                    BitmapSource bitmapSource = BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, stFrameInfo.pBufAddr, (int)stFrameInfo.stFrameInfo.nFrameLen, width * 1);
+                    bitmapSource.Freeze();
+
+                    InImg = bitmapSource;
 
                     myCamera.MV_CC_DisplayOneFrame_NET(ref stDisplayInfo);
                     myCamera.MV_CC_FreeImageBuffer_NET(ref stFrameInfo);
@@ -241,11 +244,11 @@ namespace Camera
                 feedback = $"Start Grabbing Fail! {nRet}";
                 return;
             }
+            Feedback = "Start Grab";
         }
 
         private void StopGrab(object parameter)
         {
-            // Set flag to false
             isGrabbing = false;
  
             int nRet = myCamera.MV_CC_StopGrabbing_NET();
@@ -253,22 +256,7 @@ namespace Camera
             {
                 Feedback = $"Stop Grabbing Fail! {nRet}";
             }
-        }
-
-        public void SwitchConnectionStatus(ConnectionStatus connectionStatus)
-        {
-            switch (connectionStatus)
-            {
-                case ConnectionStatus.Unknown:
-                    Feedback = "Статус неизвестен";
-                    break;
-                case ConnectionStatus.Connect:
-                    Feedback = "Устройство подключено";
-                    break;
-                case ConnectionStatus.Disconnect:
-                    Feedback = "Устройство отключено";
-                    break;
-            }
+            Feedback = "Stop Grab";
         }
 
         public void OnPropertyChanged([CallerMemberName] string prop = "")

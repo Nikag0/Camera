@@ -27,3 +27,5 @@ D:\Camera\Camera\bin\Debug\net8.0-windows\System.Drawing.Common.dll
 D:\Camera\Camera\bin\Debug\net8.0-windows\System.Private.Windows.Core.dll
 D:\Camera\Camera\bin\Debug\net8.0-windows\runtimes\win\lib\net8.0\Microsoft.Win32.SystemEvents.dll
 D:\Camera\Camera\obj\Debug\net8.0-windows\Camera.sourcelink.json
+D:\Camera\Camera\bin\Debug\net8.0-windows\LibVLCSharp.dll
+D:\Camera\Camera\bin\Debug\net8.0-windows\LibVLCSharp.WinForms.dll

@@ -31,9 +31,9 @@
                     Command="{Binding StartGrabCommand}"/>
 
             <Button Content="Stop view" Height="25" Canvas.Left="601" Canvas.Top="40"
-        Command="{Binding StartGrabCommand}"/>
+                    Command="{Binding StopGrabCommand}"/>
 
-            <ComboBox x:Name="cbDeviceList" Height="25" Width="350" Canvas.Left="180" Canvas.Top="10"
+            <ListBox x:Name="cbDeviceList" Height="25" Width="350" Canvas.Left="180" Canvas.Top="10"
                      ItemsSource="{Binding DeviceCollection}" SelectedItem="{Binding ElementName=DeviceIndex,Path=Text}"/>
 
             <TextBlock x:Name="DeviceIndex" Text="Enter the device number from the list:" Canvas.Left="540" Canvas.Top="10" />
@@ -43,6 +43,7 @@
 
         <Canvas Grid.Row="1" Background="AliceBlue" >
             <Image x:Name="CameraImage" Stretch="Uniform" Width="800" Height="360"
+                   Source="{Binding InImg}"
             />
         </Canvas>
     </Grid>
