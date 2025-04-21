@@ -15,44 +15,29 @@ using System.Collections.ObjectModel;
 using System.Windows.Media;
 using System.Data;
 using System.Drawing;
-
+using MvCamCtrl.NET;
+using System.Runtime.InteropServices;
+using System.Windows.Threading;
 
 namespace Camera
 {
     public class ViewModelMainWindow : INotifyPropertyChanged
     {
         private ObservableCollection<string> deviceCollection;
-        private List<IDeviceInfo> deviceInfoList = new List<IDeviceInfo>();
-        IDevice device = null;
-        readonly DeviceTLayerType enumTLayerType = DeviceTLayerType.MvGigEDevice | DeviceTLayerType.MvUsbDevice
-            | DeviceTLayerType.MvGenTLGigEDevice | DeviceTLayerType.MvGenTLCXPDevice | DeviceTLayerType.MvGenTLCameraLinkDevice | DeviceTLayerType.MvGenTLXoFDevice;
-
-        private int connectedDevices;
+        private MyCamera myCamera = new MyCamera();
+        private MyCamera.MV_CC_DEVICE_INFO_LIST m_stDeviceList = new MyCamera.MV_CC_DEVICE_INFO_LIST();
+        private Thread m_hReceiveThread = null;
+        private readonly Dispatcher dispatcher;
+        private string strUserDefinedName = "";
         private string feedback;
         private int deviceIndex = 0;
+        private int nRet;
         private ConnectionStatus сonnectionStatus = ConnectionStatus.Unknown;
-        private readonly object saveImageLock = new object();
 
         private bool isGrabbing = false;        // Whether it is grabbing image
         private bool isRecord = false;          // Whether it is recording
-        private Thread receiveThread = null;    // Receive image thread
-        private IFrameOut frameForSave;
-        private IFrameOut frameOut;
-        private IntPtr pictureBox1;
-
-
-
 
         public ConnectionStatus ConnectionStatus { get => сonnectionStatus; }
-        public IFrameOut FrameOut
-        {
-            get => frameOut;
-            set
-            {
-                frameOut = value;
-                OnPropertyChanged();
-            }
-        }
         public int DeviceIndex
         {
             get => deviceIndex;
@@ -75,6 +60,7 @@ namespace Camera
         public ICommand OpenDeviceCommand { get; }
         public ICommand CloseDeviceCommand { get; }
         public ICommand StartGrabCommand { get; }
+        public ICommand StopGrabCommand { get; }
         public string Feedback
         {
             get => feedback;
@@ -93,43 +79,57 @@ namespace Camera
             OpenDeviceCommand = new DelegateCommands(OpenDevice);
             CloseDeviceCommand = new DelegateCommands(ClosenDevice);
             StartGrabCommand = new DelegateCommands(StartGrab);
+            StopGrabCommand = new DelegateCommands(StopGrab);
         }
 
         private void SearchDevice(object parameter)
         {
             deviceCollection.Clear();
-            int nRet = DeviceEnumerator.EnumDevices(enumTLayerType, out deviceInfoList);
+            nRet = MyCamera.MV_CC_EnumDevices_NET(MyCamera.MV_GIGE_DEVICE | MyCamera.MV_USB_DEVICE, ref m_stDeviceList);
 
+            // Проверка на успешное выполнение операции. Константа MV_OK равна 0.
             if (nRet != MvError.MV_OK)
             {
                 Feedback =$"Enumerate devices fail!{nRet}";
                 return;
             }
 
-            for (int i = 0; i < deviceInfoList.Count; i++)
+            for (int i = 0; i < m_stDeviceList.nDeviceNum; i++)
             {
-                IDeviceInfo deviceInfo = deviceInfoList[i];
-                if (deviceInfo.UserDefinedName != "")
+                MyCamera.MV_CC_DEVICE_INFO device = (MyCamera.MV_CC_DEVICE_INFO)Marshal.PtrToStructure(m_stDeviceList.pDeviceInfo[i], typeof(MyCamera.MV_CC_DEVICE_INFO));
+
+                if (device.nTLayerType == MyCamera.MV_GIGE_DEVICE)
                 {
-                    deviceCollection.Add(deviceInfo.TLayerType.ToString() + ": " + deviceInfo.UserDefinedName + " (" + deviceInfo.SerialNumber + ")");
-                }
-                else
-                {
-                    deviceCollection.Add(deviceInfo.TLayerType.ToString() + ": " + deviceInfo.ManufacturerName + " " + deviceInfo.ModelName + " (" + deviceInfo.SerialNumber + ")");
+                    MyCamera.MV_GIGE_DEVICE_INFO_EX gigeInfo = (MyCamera.MV_GIGE_DEVICE_INFO_EX)MyCamera.ByteToStruct(device.SpecialInfo.stGigEInfo, typeof(MyCamera.MV_GIGE_DEVICE_INFO_EX));
+
+                    if ((gigeInfo.chUserDefinedName.Length > 0) && (gigeInfo.chUserDefinedName[0] != '\0'))
+                    {
+                        if (MyCamera.IsTextUTF8(gigeInfo.chUserDefinedName))
+                        {
+                            strUserDefinedName = Encoding.UTF8.GetString(gigeInfo.chUserDefinedName).TrimEnd('\0');
+                        }
+                        else
+                        {
+                            strUserDefinedName = Encoding.Default.GetString(gigeInfo.chUserDefinedName).TrimEnd('\0');
+                        }
+
+                        deviceCollection.Add("GEV: " + strUserDefinedName + " (" + gigeInfo.chSerialNumber + ")");
+                    }
+                    else
+                    {
+                        deviceCollection.Add("GEV: " + gigeInfo.chManufacturerName + " " + gigeInfo.chModelName + " (" + gigeInfo.chSerialNumber + ")");
+                    }
                 }
             }
         }
 
         private void OpenDevice(object parameter)
         {
-            if (deviceInfoList.Count == 0 || deviceCollection.Count == 0)
+            if (m_stDeviceList.nDeviceNum == 0 || deviceCollection.Count == 0)
             {
                 Feedback = "No device";
                 return;
             }
-
-            //// Get selected device information
-            IDeviceInfo deviceInfo = deviceInfoList[deviceIndex];
 
             if (deviceIndex < 0)
             {
@@ -137,166 +137,122 @@ namespace Camera
                 return;
             }
 
-            try
+            MyCamera.MV_CC_DEVICE_INFO device =
+            (MyCamera.MV_CC_DEVICE_INFO)Marshal.PtrToStructure(m_stDeviceList.pDeviceInfo[deviceIndex], typeof(MyCamera.MV_CC_DEVICE_INFO));
+
+
+            nRet = myCamera.MV_CC_CreateDevice_NET(ref device);
+            if (MyCamera.MV_OK != nRet)
             {
-                // Open device
-                device = DeviceFactory.CreateDevice(deviceInfo);
-            }
-            catch (Exception ex)
-            {
-                Feedback = $"Create Device fail! {ex.Message}";
+                Feedback = $"Create Device fail! {nRet}";
                 return;
             }
 
-            int result = device.Open();
-            if (result != MvError.MV_OK)
+            nRet = myCamera.MV_CC_OpenDevice_NET();
+            if (MyCamera.MV_OK != nRet)
             {
-                Feedback = $"Open Device fail! {result}";
+                myCamera.MV_CC_DestroyDevice_NET();
+                Feedback = $"Device open fail! {nRet}";
                 return;
             }
 
-            //Whether it is GigE device
-            if (device is IGigEDevice)
-            {
-                //Switch to GigE device
-                IGigEDevice gigEDevice = device as IGigEDevice;
 
-                // Optimal package size for network detection (valid for GigE camera only)
-                int optionPacketSize;
-                result = gigEDevice.GetOptimalPacketSize(out optionPacketSize);
-                if (result != MvError.MV_OK)
+            if (device.nTLayerType == MyCamera.MV_GIGE_DEVICE)
+            {
+                int nPacketSize = myCamera.MV_CC_GetOptimalPacketSize_NET();
+                if (nPacketSize > 0)
                 {
-                    Feedback = $"Warning: Get Packet Size failed! {result}";
+                    nRet = myCamera.MV_CC_SetIntValueEx_NET("GevSCPSPacketSize", nPacketSize);
+                    if (nRet != MyCamera.MV_OK)
+                    {
+                        Feedback = $"Set Packet Size failed! {nRet}";
+                    }
                 }
                 else
                 {
-                    result = device.Parameters.SetIntValue("GevSCPSPacketSize", (long)optionPacketSize);
-                    if (result != MvError.MV_OK)
-                    {
-                        Feedback = $"Warning: Set Packet Size failed! {result}";
-                    }
+                    Feedback = $"Get Packet Size failed! {nPacketSize}";
                 }
             }
 
-            // Set continuous acquisition mode
-            device.Parameters.SetEnumValueByString("AcquisitionMode", "Continuous");
-            device.Parameters.SetEnumValueByString("TriggerMode", "Off");
+            myCamera.MV_CC_SetEnumValue_NET("AcquisitionMode", (uint)MyCamera.MV_CAM_ACQUISITION_MODE.MV_ACQ_MODE_CONTINUOUS);
+            myCamera.MV_CC_SetEnumValue_NET("TriggerMode", (uint)MyCamera.MV_CAM_TRIGGER_MODE.MV_TRIGGER_MODE_OFF);
 
-            // Control operation
             SwitchConnectionStatus(ConnectionStatus.Connect);
         }
 
         private void ClosenDevice(object parameter)
         {
-            // Reset streaming flag
             if (isGrabbing == true)
             {
-                bnStopGrab_Click();
+                //StopGrab();
             }
 
-            // Close device
-            if (device != null)
-            {
-                device.Close();
-                device.Dispose();
-            }
+            myCamera.MV_CC_CloseDevice_NET();
+            myCamera.MV_CC_DestroyDevice_NET();
 
-            // Control operation
             SwitchConnectionStatus(ConnectionStatus.Disconnect);
         }
 
         public void ReceiveThreadProcess()
         {
-            int nRet;
-
-            Graphics graphics;   // Draw image with GDI on pictureBox
+            
+            MyCamera.MV_FRAME_OUT stFrameInfo = new MyCamera.MV_FRAME_OUT();
+            MyCamera.MV_DISPLAY_FRAME_INFO stDisplayInfo = new MyCamera.MV_DISPLAY_FRAME_INFO();
+            MyCamera.MV_DISPLAY_FRAME_INFO_EX stDisplayInfoEx = new MyCamera.MV_DISPLAY_FRAME_INFO_EX();
+            int nRet = MyCamera.MV_OK;
 
             while (isGrabbing)
             {
-                nRet = device.StreamGrabber.GetImageBuffer(1000, out frameOut);
-                if (MvError.MV_OK == nRet)
+                nRet = myCamera.MV_CC_GetImageBuffer_NET(ref stFrameInfo, 1000);
+                if (nRet == MyCamera.MV_OK)
                 {
-                    if (isRecord)
+                    IntPtr hWnd = IntPtr.Zero;
+                    Dispatcher.Invoke(new Action(() =>
                     {
-                        device.VideoRecorder.InputOneFrame(frameOut.Image);
-                    }
+                        hWnd 
+                    }));
 
-                    lock (saveImageLock)
-                    {
-                        frameForSave = frameOut.Clone() as IFrameOut;
-                    }
-#if !GDI_RENDER
-                    device.ImageRender.DisplayOneFrame(pictureBox1, frameOut.Image);
-#else
-                    // Draw image with GDI
-                    try
-                    {
-                        using (Bitmap bitmap = frameOut.Image.ToBitmap())
-                        {
-                            if (graphics == null)
-                            {
-                                graphics = pictureBox1.CreateGraphics();
-                            }
+                    stDisplayInfo.hWnd = hWnd;
+                    stDisplayInfo.pData = stFrameInfo.pBufAddr;
+                    stDisplayInfo.nDataLen = stFrameInfo.stFrameInfo.nFrameLen;
+                    stDisplayInfo.nWidth = stFrameInfo.stFrameInfo.nWidth;
+                    stDisplayInfo.nHeight = stFrameInfo.stFrameInfo.nHeight;
+                    stDisplayInfo.enPixelType = stFrameInfo.stFrameInfo.enPixelType;
 
-                            Rectangle srcRect = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
-                            Rectangle dstRect = new Rectangle(0, 0, pictureBox1.Width, pictureBox1.Height);
-                            graphics.DrawImage(bitmap, dstRect, srcRect, GraphicsUnit.Pixel);
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        device.StreamGrabber.FreeImageBuffer(frameOut);
-                        MessageBox.Show(e.Message);
-                        return;
-                    }
-#endif
-                    device.StreamGrabber.FreeImageBuffer(frameOut);
+                    myCamera.MV_CC_DisplayOneFrame_NET(ref stDisplayInfo);
+                    myCamera.MV_CC_FreeImageBuffer_NET(ref stFrameInfo);
                 }
             }
-        }
+            }
 
         private void StartGrab(object parameter)
-        {
-            try
             {
-                // Set flag bit
-                isGrabbing = true;
+            // Set flag to false
+            isGrabbing = true;
 
-                receiveThread = new Thread(ReceiveThreadProcess);
-                receiveThread.Start();
-            }
-            catch (Exception ex)
-            {
-                Feedback = $"Start thread failed! {ex.Message}";
-                throw;
-            }
+            m_hReceiveThread = new Thread(ReceiveThreadProcess);
+            m_hReceiveThread.Start();
 
-            // Start grabbing
-            int result = device.StreamGrabber.StartGrabbing();
-            if (result != MvError.MV_OK)
+            // ch:开始采集 | en:Start Grabbing
+            nRet = myCamera.MV_CC_StartGrabbing_NET();
+            if (MyCamera.MV_OK != nRet)
             {
                 isGrabbing = false;
-                receiveThread.Join();
-                Feedback = $"Start Grabbing Fail! {result}";
+                feedback = $"Start Grabbing Fail! {nRet}";
                 return;
             }
         }
 
-        private void bnStopGrab_Click()
+        private void StopGrab(object parameter)
         {
             // Set flag to false
             isGrabbing = false;
-            receiveThread.Join();
-
-            // Stop grabbing
-            int result = device.StreamGrabber.StopGrabbing();
-            if (result != MvError.MV_OK)
+ 
+            int nRet = myCamera.MV_CC_StopGrabbing_NET();
+            if (nRet != MyCamera.MV_OK)
             {
-                Feedback = $"Stop Grabbing Fail! {result}";
+                Feedback = $"Stop Grabbing Fail! {nRet}";
             }
-
-            // Control operation
-            bnStopGrab_Click();
         }
 
         public void SwitchConnectionStatus(ConnectionStatus connectionStatus)

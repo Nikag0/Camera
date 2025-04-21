@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Camera" d:DataContext="{d:DesignInstance Type=local:ViewModelMainWindow}"
+ 
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
@@ -13,33 +14,36 @@
         </Grid.RowDefinitions>
 
         <Canvas Grid.Row="0" Background="Lavender">
-            <Button Content="Search Device" Height="25" Canvas.Left="10" Canvas.Top="10"
-                    Command="{Binding SearchDeviceCommand}"/>
+            <Button Content="Search device" Height="25" Canvas.Left="10" Canvas.Top="10"
+                    Command="{Binding SearchDeviceCommand}" HorizontalAlignment="Left" VerticalAlignment="Center" Width="148"/>
 
-            <TextBlock Text="{Binding Feedback}" Canvas.Left="180" Canvas.Top="40" />
+            <TextBlock Text="Message:" TextAlignment="Center"  Canvas.Left="180" Canvas.Top="40" Height="25" Width="50"/>
+            <TextBlock Text="{Binding Feedback}" Canvas.Left="235" Canvas.Top="40" />
 
-            <Button Content="Open Device" Height="25" Canvas.Left="100" Canvas.Top="10"
-                    Command="{Binding OpenDeviceCommand}"/>
+            <Button Content="Open device" Height="25" Canvas.Left="11" Canvas.Top="40"
+                    Command="{Binding OpenDeviceCommand}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
 
-            <Button Content="Close Device" Height="25" Canvas.Left="100" Canvas.Top="40"
-                    Command="{Binding CloseDeviceCommand}"/>
+            <Button Content="Close device" Height="25" Canvas.Left="87" Canvas.Top="40"
+                    Command="{Binding CloseDeviceCommand}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
 
 
-            <Button Content="Start Grab" Height="25" Canvas.Left="10" Canvas.Top="40"
+            <Button Content="Start view" Height="25" Canvas.Left="540" Canvas.Top="40"
                     Command="{Binding StartGrabCommand}"/>
 
+            <Button Content="Stop view" Height="25" Canvas.Left="601" Canvas.Top="40"
+        Command="{Binding StartGrabCommand}"/>
 
-            <ListBox x:Name="cbDeviceList" Height="25" Width="350" Canvas.Left="180" Canvas.Top="10"
-                     ItemsSource="{Binding DeviceCollection}"/>
+            <ComboBox x:Name="cbDeviceList" Height="25" Width="350" Canvas.Left="180" Canvas.Top="10"
+                     ItemsSource="{Binding DeviceCollection}" SelectedItem="{Binding ElementName=DeviceIndex,Path=Text}"/>
 
-            <TextBlock Text="Enter the device number from the list:" Canvas.Left="540" Canvas.Top="10" />
+            <TextBlock x:Name="DeviceIndex" Text="Enter the device number from the list:" Canvas.Left="540" Canvas.Top="10" />
             <TextBox Width="20" Canvas.Left="745" Canvas.Top="10" 
                      Text="{Binding DeviceIndex}"/>
         </Canvas>
 
         <Canvas Grid.Row="1" Background="AliceBlue" >
-            <Image x:Name="CameraImage" Stretch="Uniform" Width="800" Height="36"
-                   Source="{Binding FrameOut}"/>
+            <Image x:Name="CameraImage" Stretch="Uniform" Width="800" Height="360"
+            />
         </Canvas>
     </Grid>
 </Window>
