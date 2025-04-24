@@ -13,38 +13,93 @@
             <RowDefinition Height="300*"></RowDefinition>
         </Grid.RowDefinitions>
 
-        <Canvas Grid.Row="0" Background="Lavender">
-            <Button Content="Search device" Height="25" Canvas.Left="10" Canvas.Top="10"
-                    Command="{Binding SearchDeviceCommand}" HorizontalAlignment="Left" VerticalAlignment="Center" Width="148"/>
 
-            <TextBlock Text="Message:" TextAlignment="Center"  Canvas.Left="180" Canvas.Top="40" Height="25" Width="50"/>
-            <TextBlock Text="{Binding Feedback}" Canvas.Left="235" Canvas.Top="40" />
+        <Button Content="Search device" Height="25" Width="130" Margin="0,10,0,0" Grid.Row="0"
+                HorizontalAlignment="Left" VerticalAlignment="Top" 
+                Command="{Binding SearchDeviceCommand}"/>
 
-            <Button Content="Open device" Height="25" Canvas.Left="11" Canvas.Top="40"
-                    Command="{Binding OpenDeviceCommand}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+        <Button Height="25" Width="60" Margin="70,0,0,5" Grid.Row="0" 
+                HorizontalAlignment="Left" VerticalAlignment="Bottom">
+            <Button.Style>
+                <Style TargetType="Button">
+                    <Setter Property="Content" Value="Open"/>
+                    <Setter Property="Command" Value="{Binding OpenDeviceCommand}" />
+                    <Setter Property="IsEnabled" Value="False"/>
+                    <Style.Triggers >
 
-            <Button Content="Close device" Height="25" Canvas.Left="87" Canvas.Top="40"
-                    Command="{Binding CloseDeviceCommand}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                        <DataTrigger Binding="{Binding }" Value="True ">
+                            <Setter Property="Content" Value="Close" />
+                            <Setter Property="Command" Value="{Binding CloseDeviceCommand}" />
+                        </DataTrigger>
+
+                        <DataTrigger Binding="{Binding AreAnyDevices}" Value="True">
+                            <Setter Property="IsEnabled" Value="True" />
+                        </DataTrigger>
+
+                    </Style.Triggers>
+                </Style>
+            </Button.Style>
+        </Button>
+
+        <Button Height="25" Width="60" Margin="0,0,10,5" Grid.Row="0" 
+                HorizontalAlignment="Left" VerticalAlignment="Bottom">
+            <Button.Style>
+                <Style TargetType="Button">
+                    <Setter Property="Content" Value="Start view"/>
+                    <Setter Property="Command" Value="{Binding StartGrabCommand}" />
+                    <Setter Property="IsEnabled" Value="False"/>
+                    <Style.Triggers >
+
+                        <DataTrigger Binding="{Binding AreAnyDevices}" Value="True">
+                            <Setter Property="IsEnabled" Value="True" />
+                        </DataTrigger>
+                        
+                        <DataTrigger Binding="{Binding }" Value="True ">
+                            <Setter Property="Content" Value="Stop view" />
+                            <Setter Property="Command" Value="{Binding StopGrabCommand}" />
+                        </DataTrigger>
+
+                    </Style.Triggers>
+                </Style>
+            </Button.Style>
+        </Button>
+
+        <TextBlock Text="Message:" Height="20" Width="50" Margin="150,45,0,0" Grid.Row="0"
+                HorizontalAlignment="Left" VerticalAlignment="Top"/>
+
+        <TextBlock Text="{Binding Feedback}" Height="20" Width="250" Margin="210,45,0,0" Grid.Row="0"
+        HorizontalAlignment="Left" VerticalAlignment="Top"/>
 
 
-            <Button Content="Start view" Height="25" Canvas.Left="540" Canvas.Top="40"
-                    Command="{Binding StartGrabCommand}"/>
+        <ComboBox x:Name="cbDeviceList" Height="25" Width="400" Margin="150,10,0,0" Grid.Row="0"
+                HorizontalAlignment="Left" VerticalAlignment="Top" 
+                ItemsSource="{Binding CollectionCamera, Mode=OneWay}" SelectedItem="{Binding NameSelectDevice, Mode=OneWayToSource}" SelectedIndex="{Binding IndexSelectDevice, Mode=TwoWay}">
+        </ComboBox>
 
-            <Button Content="Stop view" Height="25" Canvas.Left="601" Canvas.Top="40"
-                    Command="{Binding StopGrabCommand}"/>
+        <Image x:Name="CameraImage1" Stretch="Uniform" Width="380" Height="340" Margin="10,10,0,0" Grid.Row="1"
+                HorizontalAlignment="Left" VerticalAlignment="Bottom"  
+                Source="{Binding InImg1}">
 
-            <ListBox x:Name="cbDeviceList" Height="25" Width="350" Canvas.Left="180" Canvas.Top="10"
-                     ItemsSource="{Binding DeviceCollection}" SelectedItem="{Binding ElementName=DeviceIndex,Path=Text}"/>
+            <Image.Effect>
+                <DropShadowEffect ShadowDepth="0" 
+                        Color="Black" 
+                        Opacity="0.5" 
+                        BlurRadius="10"/>
+            </Image.Effect>
 
-            <TextBlock x:Name="DeviceIndex" Text="Enter the device number from the list:" Canvas.Left="540" Canvas.Top="10" />
-            <TextBox Width="20" Canvas.Left="745" Canvas.Top="10" 
-                     Text="{Binding DeviceIndex}"/>
-        </Canvas>
+        </Image>
 
-        <Canvas Grid.Row="1" Background="AliceBlue" >
-            <Image x:Name="CameraImage" Stretch="Uniform" Width="800" Height="360"
-                   Source="{Binding InImg}"
-            />
-        </Canvas>
+        <Image x:Name="CameraImage2" Stretch="Uniform" Width="380" Height="340" Margin="0,10,10,0"
+         HorizontalAlignment="Right" VerticalAlignment="Bottom" Grid.Column="1" Grid.Row="1"
+         Source="{Binding InImg2}">
+
+            <Image.Effect>
+                <DropShadowEffect ShadowDepth="0" 
+              Color="Black" 
+              Opacity="0.5" 
+              BlurRadius="10"/>
+            </Image.Effect>
+
+        </Image>
     </Grid>
 </Window>

@@ -19,33 +19,84 @@ using MvCamCtrl.NET;
 using System.Runtime.InteropServices;
 using System.Windows.Threading;
 using System.Windows.Media.Imaging;
+using System.Text.RegularExpressions;
 
 namespace Camera
 {
     public class ViewModelMainWindow : INotifyPropertyChanged
     {
-        private ObservableCollection<string> deviceCollection;
+        private CameraManager cameraManager = new CameraManager();
         private MyCamera myCamera = new MyCamera();
-        private MyCamera.MV_CC_DEVICE_INFO_LIST m_stDeviceList = new MyCamera.MV_CC_DEVICE_INFO_LIST();
         private Thread m_hReceiveThread = null;
-        private string strUserDefinedName = "";
         private string feedback;
         private int deviceIndex = 0;
         private int nRet;
-        private bool isGrabbing = false;       
+        private bool isGrabbing = false;
+        private int indexSelectDevice;
+        private string nameSelectDevice;
+        private bool areAnyDevices = false;
+        private BitmapSource inImg1;
+        private BitmapSource inImg2;
 
-        private BitmapSource inImg;
-
-        public BitmapSource InImg
+        private ObservableCollection<PerfomanceCamera> CollectionCamera
         {
-            get => inImg;
+            get => cameraManager.CollectionCamera;
             set
             {
-                inImg = value;
                 OnPropertyChanged();
             }
         }
 
+        public bool AreAnyDevices
+        {
+            get => areAnyDevices;
+
+            set
+            {
+                areAnyDevices = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public int IndexSelectDevice
+        {
+            get => indexSelectDevice;
+            set
+            {
+                indexSelectDevice = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string NameSelectDevice
+        {
+            get => nameSelectDevice;
+            set
+            {
+                nameSelectDevice = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public BitmapSource InImg1
+        {
+            get => inImg1;
+            set
+            {
+                inImg1 = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public BitmapSource InImg2
+        {
+            get => inImg1;
+            set
+            {
+                inImg1 = value;
+                OnPropertyChanged();
+            }
+        }
 
         public int DeviceIndex
         {
@@ -56,15 +107,7 @@ namespace Camera
                 OnPropertyChanged();
             }
         }
-        public ObservableCollection<string> DeviceCollection
-        {
-            get => deviceCollection;
-            set
-            {
-                deviceCollection = value;
-                OnPropertyChanged();
-            }
-        }
+
         public ICommand SearchDeviceCommand { get; }
         public ICommand OpenDeviceCommand { get; }
         public ICommand CloseDeviceCommand { get; }
@@ -83,180 +126,54 @@ namespace Camera
 
         public ViewModelMainWindow()
         {
-            DeviceCollection = new ObservableCollection<string>();
-            SearchDeviceCommand = new DelegateCommands(SearchDevice);
-            OpenDeviceCommand = new DelegateCommands(OpenDevice);
-            //CloseDeviceCommand = new DelegateCommands(ClosenDevice);
-            StartGrabCommand = new DelegateCommands(StartGrab);
-            StopGrabCommand = new DelegateCommands(StopGrab);
+            SearchDeviceCommand = new DelegateCommands(p => SearchDevice());
+            OpenDeviceCommand = new DelegateCommands(p => OpenDevice());
+            CloseDeviceCommand = new DelegateCommands(p => ClosenDevice());
+            StartGrabCommand = new DelegateCommands(p => StartGrab());
+            StopGrabCommand = new DelegateCommands(p => StopGrab());
         }
 
-        private void SearchDevice(object parameter)
+        private void SearchDevice()
         {
-            deviceCollection.Clear();
-            nRet = MyCamera.MV_CC_EnumDevices_NET(MyCamera.MV_GIGE_DEVICE | MyCamera.MV_USB_DEVICE, ref m_stDeviceList);
-
-            // Проверка на успешное выполнение операции. Константа MV_OK равна 0.
-            if (nRet != MvError.MV_OK)
+            if (!cameraManager.SearchDevice())
             {
-                Feedback =$"Enumerate devices fail!{nRet}";
+                Feedback = $"No device or enumerate devices fail!";
                 return;
             }
-
-            for (int i = 0; i < m_stDeviceList.nDeviceNum; i++)
-            {
-                MyCamera.MV_CC_DEVICE_INFO device = (MyCamera.MV_CC_DEVICE_INFO)Marshal.PtrToStructure(m_stDeviceList.pDeviceInfo[i], typeof(MyCamera.MV_CC_DEVICE_INFO));
-
-                if (device.nTLayerType == MyCamera.MV_GIGE_DEVICE)
-                {
-                    MyCamera.MV_GIGE_DEVICE_INFO_EX gigeInfo = (MyCamera.MV_GIGE_DEVICE_INFO_EX)MyCamera.ByteToStruct(device.SpecialInfo.stGigEInfo, typeof(MyCamera.MV_GIGE_DEVICE_INFO_EX));
-
-                    if ((gigeInfo.chUserDefinedName.Length > 0) && (gigeInfo.chUserDefinedName[0] != '\0'))
-                    {
-                        if (MyCamera.IsTextUTF8(gigeInfo.chUserDefinedName))
-                        {
-                            strUserDefinedName = Encoding.UTF8.GetString(gigeInfo.chUserDefinedName).TrimEnd('\0');
-                        }
-                        else
-                        {
-                            strUserDefinedName = Encoding.Default.GetString(gigeInfo.chUserDefinedName).TrimEnd('\0');
-                        }
-
-                        deviceCollection.Add("GEV: " + strUserDefinedName + " (" + gigeInfo.chSerialNumber + ")");
-                    }
-                    else
-                    {
-                        deviceCollection.Add("GEV: " + gigeInfo.chManufacturerName + " " + gigeInfo.chModelName + " (" + gigeInfo.chSerialNumber + ")");
-                    }
-                }
-            }
+            Feedback = $"Devices are discovered";
+            AreAnyDevices = true;
+            indexSelectDevice = 0;
         }
 
-        private void OpenDevice(object parameter)
+
+        private void OpenDevice()
         {
-            if (m_stDeviceList.nDeviceNum == 0 || deviceCollection.Count == 0)
+            Regex regex = new Regex(@"\(([A-Z0-9]{8,})\)$");
+            Match match = regex.Match(nameSelectDevice);
+
+            if (!match.Success)
             {
-                Feedback = "No device";
-                return;
+                Feedback = "Серийный номер не найден!";
             }
 
-            if (deviceIndex < 0)
-            {
-                Feedback = "The device number cannot be less than 0";
-                return;
-            }
+            string serialNumber = match.Groups[1].Value;
 
-            MyCamera.MV_CC_DEVICE_INFO device =
-            (MyCamera.MV_CC_DEVICE_INFO)Marshal.PtrToStructure(m_stDeviceList.pDeviceInfo[deviceIndex], typeof(MyCamera.MV_CC_DEVICE_INFO));
-
-
-            nRet = myCamera.MV_CC_CreateDevice_NET(ref device);
-            if (MyCamera.MV_OK != nRet)
-            {
-                Feedback = $"Create Device fail! {nRet}";
-                return;
-            }
-
-            nRet = myCamera.MV_CC_OpenDevice_NET();
-            if (MyCamera.MV_OK != nRet)
-            {
-                myCamera.MV_CC_DestroyDevice_NET();
-                Feedback = $"Device open fail! {nRet}";
-                return;
-            }
-
-
-            if (device.nTLayerType == MyCamera.MV_GIGE_DEVICE)
-            {
-                int nPacketSize = myCamera.MV_CC_GetOptimalPacketSize_NET();
-                if (nPacketSize > 0)
-                {
-                    nRet = myCamera.MV_CC_SetIntValueEx_NET("GevSCPSPacketSize", nPacketSize);
-                    if (nRet != MyCamera.MV_OK)
-                    {
-                        Feedback = $"Set Packet Size failed! {nRet}";
-                    }
-                }
-                else
-                {
-                    Feedback = $"Get Packet Size failed! {nPacketSize}";
-                }
-            }
-
-            myCamera.MV_CC_SetEnumValue_NET("AcquisitionMode", (uint)MyCamera.MV_CAM_ACQUISITION_MODE.MV_ACQ_MODE_CONTINUOUS);
-            myCamera.MV_CC_SetEnumValue_NET("TriggerMode", (uint)MyCamera.MV_CAM_TRIGGER_MODE.MV_TRIGGER_MODE_OFF);
-            Feedback = "Device Open";
+            Feedback = cameraManager.OpenDevice(serialNumber, indexSelectDevice);
         }
 
-        //private void ClosenDevice(object parameter)
-        //{
-        //    if (isGrabbing == true)
-        //    {
-        //        StopGrab();
-        //    }
-
-        //    myCamera.MV_CC_CloseDevice_NET();
-        //    myCamera.MV_CC_DestroyDevice_NET();
-
-        //    SwitchConnectionStatus(ConnectionStatus.Disconnect);
-        //}
-
-        public void ReceiveThreadProcess()
+        private void ClosenDevice()
         {
-            
-            MyCamera.MV_FRAME_OUT stFrameInfo = new MyCamera.MV_FRAME_OUT();
-            MyCamera.MV_DISPLAY_FRAME_INFO stDisplayInfo = new MyCamera.MV_DISPLAY_FRAME_INFO();
-            MyCamera.MV_DISPLAY_FRAME_INFO_EX stDisplayInfoEx = new MyCamera.MV_DISPLAY_FRAME_INFO_EX();
-            int nRet = MyCamera.MV_OK;
-
-            while (isGrabbing)
-            {
-                nRet = myCamera.MV_CC_GetImageBuffer_NET(ref stFrameInfo, 1000);
-                if (nRet == MyCamera.MV_OK)
-                {
-                    int width = stFrameInfo.stFrameInfo.nWidth;
-                    int height = stFrameInfo.stFrameInfo.nHeight;
-
-                    BitmapSource bitmapSource = BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, stFrameInfo.pBufAddr, (int)stFrameInfo.stFrameInfo.nFrameLen, width * 1);
-                    bitmapSource.Freeze();
-
-                    InImg = bitmapSource;
-
-                    myCamera.MV_CC_DisplayOneFrame_NET(ref stDisplayInfo);
-                    myCamera.MV_CC_FreeImageBuffer_NET(ref stFrameInfo);
-                }
-            }
-            }
-
-        private void StartGrab(object parameter)
-            {
-            // Set flag to false
-            isGrabbing = true;
-
-            m_hReceiveThread = new Thread(ReceiveThreadProcess);
-            m_hReceiveThread.Start();
-
-            // ch:开始采集 | en:Start Grabbing
-            nRet = myCamera.MV_CC_StartGrabbing_NET();
-            if (MyCamera.MV_OK != nRet)
-            {
-                isGrabbing = false;
-                feedback = $"Start Grabbing Fail! {nRet}";
-                return;
-            }
-            Feedback = "Start Grab";
+   
         }
 
-        private void StopGrab(object parameter)
+        private void StartGrab()
         {
-            isGrabbing = false;
- 
-            int nRet = myCamera.MV_CC_StopGrabbing_NET();
-            if (nRet != MyCamera.MV_OK)
-            {
-                Feedback = $"Stop Grabbing Fail! {nRet}";
-            }
-            Feedback = "Stop Grab";
+            InImg1 = cameraManager.StartGrab();
+        }
+
+        private void StopGrab()
+        {
+           
         }
 
         public void OnPropertyChanged([CallerMemberName] string prop = "")
