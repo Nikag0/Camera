@@ -23,18 +23,18 @@
             <Button.Style>
                 <Style TargetType="Button">
                     <Setter Property="Content" Value="Open"/>
-                    <Setter Property="Command" Value="{Binding OpenDeviceCommand}" />
-                    <Setter Property="IsEnabled" Value="False"/>
+                    <Setter Property="Command" Value="{Binding CreateDeviceCommand}" />
+                    <!--<Setter Property="IsEnabled" Value="False"/>-->
                     <Style.Triggers >
 
-                        <DataTrigger Binding="{Binding }" Value="True ">
-                            <Setter Property="Content" Value="Close" />
+                        <DataTrigger Binding="{Binding IsCreate}" Value="True ">
+                            <Setter Property="Content" Value="Destroy" />
                             <Setter Property="Command" Value="{Binding CloseDeviceCommand}" />
                         </DataTrigger>
 
-                        <DataTrigger Binding="{Binding AreAnyDevices}" Value="True">
+                        <!--<DataTrigger Binding="{Binding AreAnyDevices}" Value="True">
                             <Setter Property="IsEnabled" Value="True" />
-                        </DataTrigger>
+                        </DataTrigger>-->
 
                     </Style.Triggers>
                 </Style>
@@ -47,14 +47,14 @@
                 <Style TargetType="Button">
                     <Setter Property="Content" Value="Start view"/>
                     <Setter Property="Command" Value="{Binding StartGrabCommand}" />
-                    <Setter Property="IsEnabled" Value="False"/>
+                    <!--<Setter Property="IsEnabled" Value="False"/>-->
                     <Style.Triggers >
 
-                        <DataTrigger Binding="{Binding AreAnyDevices}" Value="True">
+                        <!--<DataTrigger Binding="{Binding AreAnyDevices}" Value="True">
                             <Setter Property="IsEnabled" Value="True" />
-                        </DataTrigger>
-                        
-                        <DataTrigger Binding="{Binding }" Value="True ">
+                        </DataTrigger>-->
+
+                        <DataTrigger Binding="{Binding IsGrab}" Value="True ">
                             <Setter Property="Content" Value="Stop view" />
                             <Setter Property="Command" Value="{Binding StopGrabCommand}" />
                         </DataTrigger>
@@ -73,31 +73,23 @@
 
         <ComboBox x:Name="cbDeviceList" Height="25" Width="400" Margin="150,10,0,0" Grid.Row="0"
                 HorizontalAlignment="Left" VerticalAlignment="Top" 
-                ItemsSource="{Binding CollectionCamera, Mode=OneWay}" SelectedItem="{Binding NameSelectDevice, Mode=OneWayToSource}" SelectedIndex="{Binding IndexSelectDevice, Mode=TwoWay}">
+                ItemsSource="{Binding NameCamers, Mode=OneWay}" SelectedItem="{Binding NameSelectDevice, Mode=OneWayToSource}">
         </ComboBox>
 
-        <Image x:Name="CameraImage1" Stretch="Uniform" Width="380" Height="340" Margin="10,10,0,0" Grid.Row="1"
+        <ComboBox x:Name="cbCreateDeviceList" Height="25" Width="250" Margin="550,10,0,0" Grid.Row="0"
+               HorizontalAlignment="Left" VerticalAlignment="Top" 
+               ItemsSource="{Binding CreatingCamersCollection, Mode=OneWay}">
+        </ComboBox>
+
+        <Image x:Name="CameraImage1" Stretch="Uniform" Width="770" Height="340" Margin="10,0,0,0" Grid.Row="1"
                 HorizontalAlignment="Left" VerticalAlignment="Bottom"  
-                Source="{Binding InImg1}">
+                Source="{Binding InImg}">
 
             <Image.Effect>
                 <DropShadowEffect ShadowDepth="0" 
                         Color="Black" 
                         Opacity="0.5" 
                         BlurRadius="10"/>
-            </Image.Effect>
-
-        </Image>
-
-        <Image x:Name="CameraImage2" Stretch="Uniform" Width="380" Height="340" Margin="0,10,10,0"
-         HorizontalAlignment="Right" VerticalAlignment="Bottom" Grid.Column="1" Grid.Row="1"
-         Source="{Binding InImg2}">
-
-            <Image.Effect>
-                <DropShadowEffect ShadowDepth="0" 
-              Color="Black" 
-              Opacity="0.5" 
-              BlurRadius="10"/>
             </Image.Effect>
 
         </Image>

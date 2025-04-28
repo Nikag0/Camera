@@ -1,0 +1,116 @@
+﻿using MvCamCtrl.NET;
+using MvCameraControl;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.IO;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+
+namespace Camera
+{
+    public class CameraPerformance : INotifyPropertyChanged
+    {
+        private BitmapSource inImg;
+        private MyCamera myCamera = new MyCamera();
+        private MyCamera.MV_CC_DEVICE_INFO cameraInfo = new MyCamera.MV_CC_DEVICE_INFO();
+        private int nRet;
+        private Thread m_hReceiveThread = null;
+        private bool isOpen = false;
+        private bool isGrab = false;
+        private string serialNumber;
+        
+        public MyCamera MyCamera { get => myCamera; private set { myCamera = value; } }
+        public BitmapSource InImg { get => inImg; private set { inImg = value; } }
+        public string SerialNumber { get => serialNumber; private set { serialNumber = value; } }
+        public bool IsCreate
+        {
+            get => isOpen;
+            set
+            {
+                isOpen = value;
+                OnPropertyChanged();
+            }
+        }
+        public bool IsGrab
+        {
+            get => isGrab;
+            set
+            {
+                isGrab = value;
+                OnPropertyChanged();
+            }
+        }
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        public CameraPerformance(MyCamera.MV_CC_DEVICE_INFO cameraInfo, string serialNubmer)
+        {
+            this.cameraInfo = cameraInfo;
+            this.serialNumber = serialNubmer;
+        }
+
+        private void ReceiveThreadProcess()
+        {
+
+            MyCamera.MV_FRAME_OUT stFrameInfo = new MyCamera.MV_FRAME_OUT();
+            MyCamera.MV_DISPLAY_FRAME_INFO stDisplayInfo = new MyCamera.MV_DISPLAY_FRAME_INFO();
+            MyCamera.MV_DISPLAY_FRAME_INFO_EX stDisplayInfoEx = new MyCamera.MV_DISPLAY_FRAME_INFO_EX();
+            int nRet = MyCamera.MV_OK;
+
+            while (isGrab)
+            {
+                nRet = myCamera.MV_CC_GetImageBuffer_NET(ref stFrameInfo, 1000);
+                if (nRet == MyCamera.MV_OK)
+                {
+                    int width = stFrameInfo.stFrameInfo.nWidth;
+                    int height = stFrameInfo.stFrameInfo.nHeight;
+
+                    BitmapSource bitmapSource = BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, stFrameInfo.pBufAddr, (int)stFrameInfo.stFrameInfo.nFrameLen, width * 1);
+                    bitmapSource.Freeze();
+
+                    inImg = bitmapSource;
+
+                    myCamera.MV_CC_DisplayOneFrame_NET(ref stDisplayInfo);
+                    myCamera.MV_CC_FreeImageBuffer_NET(ref stFrameInfo);
+                }
+            }
+        }
+
+        public bool StartGrab()
+        {
+            IsGrab = true;
+            m_hReceiveThread = new Thread(ReceiveThreadProcess);
+            m_hReceiveThread.Start();
+
+            nRet = myCamera.MV_CC_StartGrabbing_NET();
+            if (MyCamera.MV_OK != nRet)
+            {
+                isGrab = false;
+                return false;
+            }
+
+            return true;
+        }
+
+        public bool StopGrab()
+        {
+            isGrab = false;
+
+            int nRet = myCamera.MV_CC_StopGrabbing_NET();
+            if (nRet != MyCamera.MV_OK)
+            {
+                return false;
+            }
+
+            IsGrab = false;
+            return true;
+        }
+
+        public void OnPropertyChanged([CallerMemberName] string prop = "")
+        {
+            if (PropertyChanged != null)
+                PropertyChanged(this, new PropertyChangedEventArgs(prop));
+        }
+    }
+}

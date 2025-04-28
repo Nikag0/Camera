@@ -10,30 +10,26 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
+using System.Windows.Media.Media3D;
 
 namespace Camera
 {
     public class CameraManager
     {
-        private CameraCommands cameraCommands;
-        private PerfomanceCamera perfomanceCamera; 
-        private MyCamera myCamera = new MyCamera();
         private MyCamera.MV_CC_DEVICE_INFO_LIST findDeviceList = new MyCamera.MV_CC_DEVICE_INFO_LIST();
-        private ObservableCollection<PerfomanceCamera> collectionCamera = new ObservableCollection<PerfomanceCamera>();
-        private int nRet;
-        private string strUserDefinedName = "";
-        private BitmapSource inImg1;
+        private List<string> nameCamers = new List<string>();
+        private ObservableCollection<CameraPerformance> creatingCamersCollection = new ObservableCollection<CameraPerformance>();
+        private CameraPerformance cameraCreate;
 
-        public ObservableCollection<PerfomanceCamera> CollectionCamera { get => collectionCamera; private set { collectionCamera = value; } }
-        public CameraManager()
-        {
-            CameraCommands cameraCommands = new CameraCommands(myCamera);
-            this.cameraCommands = cameraCommands;
-        }
+        public ObservableCollection<CameraPerformance> CreatingCamersCollection { get => creatingCamersCollection; private set { creatingCamersCollection = value; } }
+        public MyCamera.MV_CC_DEVICE_INFO_LIST FindDeviceList { get => findDeviceList; private set { findDeviceList = value; } }
+        public List<string> NameCamers { get => nameCamers; private set { nameCamers = value; } }
 
-        public bool SearchDevice()
+        public bool SearchСamera()
         {
-            nRet = MyCamera.MV_CC_EnumDevices_NET(MyCamera.MV_GIGE_DEVICE | MyCamera.MV_USB_DEVICE, ref findDeviceList);
+            nameCamers.Clear();
+
+            int nRet = MyCamera.MV_CC_EnumDevices_NET(MyCamera.MV_GIGE_DEVICE, ref findDeviceList);
 
             if (nRet != 0)
             {
@@ -42,76 +38,86 @@ namespace Camera
 
             for (int i = 0; i < findDeviceList.nDeviceNum; i++)
             {
-                MyCamera.MV_CC_DEVICE_INFO device = (MyCamera.MV_CC_DEVICE_INFO)Marshal.PtrToStructure(findDeviceList.pDeviceInfo[i], typeof(MyCamera.MV_CC_DEVICE_INFO));
+                MyCamera.MV_CC_DEVICE_INFO device = (MyCamera.MV_CC_DEVICE_INFO) Marshal.PtrToStructure(findDeviceList.pDeviceInfo[i], typeof(MyCamera.MV_CC_DEVICE_INFO));
 
                 if (device.nTLayerType == MyCamera.MV_GIGE_DEVICE)
                 {
-                    MyCamera.MV_GIGE_DEVICE_INFO_EX gigeInfo = (MyCamera.MV_GIGE_DEVICE_INFO_EX)MyCamera.ByteToStruct(device.SpecialInfo.stGigEInfo, typeof(MyCamera.MV_GIGE_DEVICE_INFO_EX));
-
-                    if (collectionCamera.Any(camera => camera.SerialNumer == gigeInfo.chSerialNumber))
-                    {
-                        return true;
-                    }
+                    MyCamera.MV_GIGE_DEVICE_INFO_EX gigeInfo = (MyCamera.MV_GIGE_DEVICE_INFO_EX) MyCamera.ByteToStruct(device.SpecialInfo.stGigEInfo, typeof(MyCamera.MV_GIGE_DEVICE_INFO_EX));
 
                     if ((gigeInfo.chUserDefinedName.Length > 0) && (gigeInfo.chUserDefinedName[0] != '\0'))
                     {
-                        if (MyCamera.IsTextUTF8(gigeInfo.chUserDefinedName))
-                        {
-                            strUserDefinedName = Encoding.UTF8.GetString(gigeInfo.chUserDefinedName).TrimEnd('\0');
-                        }
-                        else
-                        {
-                            strUserDefinedName = Encoding.Default.GetString(gigeInfo.chUserDefinedName).TrimEnd('\0');
-                        }
-
-                        collectionCamera.Add(perfomanceCamera = new PerfomanceCamera
-                        {
-                            Name = "GEV: " + gigeInfo.chManufacturerName + " " + gigeInfo.chModelName + " (" + gigeInfo.chSerialNumber + ")",
-                            SerialNumer = gigeInfo.chSerialNumber,
-                            NubmerInDeviceLict = i
-                        });
+                        nameCamers.Add("GEV: " + gigeInfo.chManufacturerName + " " + gigeInfo.chModelName + " (" + gigeInfo.chSerialNumber + ")");
                     }
                     else
                     {
-                        collectionCamera.Add(perfomanceCamera = new PerfomanceCamera
-                        {
-                            Name = "GEV: " + gigeInfo.chManufacturerName + " " + gigeInfo.chModelName + " (" + gigeInfo.chSerialNumber + ")",
-                            SerialNumer = gigeInfo.chSerialNumber,
-                            NubmerInDeviceLict = i
-                        });
+                        nameCamers.Add("GEV: " + gigeInfo.chManufacturerName + " " + gigeInfo.chModelName + " (" + gigeInfo.chSerialNumber + ")");
                     }
                 }
             }
 
-            if (collectionCamera.Count == 0)
+            if (nameCamers.Count == 0)
             {
                 return false;
             }
+
             return true;
         }
 
-        public string OpenDevice(string serialNumberDevice, int indexSelectDevice)
+        public bool CameraCreate(string serialNumber)
         {
-
-            if (collectionCamera.Any(camera => camera.SerialNumer == serialNumberDevice && camera.IsOpen))
+            if (findDeviceList.nDeviceNum == 0)
             {
-                return "Device already open";
+                return false;
             }
 
-            PerfomanceCamera cameraToUpdate = collectionCamera.FirstOrDefault(camera => camera.SerialNumer == serialNumberDevice);
-
-            if (cameraToUpdate != null)
+            for (int i = 0; i < findDeviceList.nDeviceNum; i++)
             {
-                cameraToUpdate.IsOpen = true;
+                MyCamera.MV_CC_DEVICE_INFO deviceInfo = (MyCamera.MV_CC_DEVICE_INFO)Marshal.PtrToStructure(findDeviceList.pDeviceInfo[i], typeof(MyCamera.MV_CC_DEVICE_INFO));
+
+                if (deviceInfo.nTLayerType == MyCamera.MV_GIGE_DEVICE)
+                {
+                    MyCamera.MV_GIGE_DEVICE_INFO_EX gigeInfo = (MyCamera.MV_GIGE_DEVICE_INFO_EX)MyCamera.ByteToStruct(deviceInfo.SpecialInfo.stGigEInfo, typeof(MyCamera.MV_GIGE_DEVICE_INFO_EX));
+
+                    if (gigeInfo.chSerialNumber == serialNumber)
+                    {
+                        creatingCamersCollection.Add(cameraCreate = new CameraPerformance(deviceInfo, gigeInfo.chSerialNumber));
+
+                        int nRet = cameraCreate.MyCamera.MV_CC_CreateDevice_NET(ref deviceInfo);
+                        if (MyCamera.MV_OK != nRet)
+                        {
+                            return false;
+                        }
+
+                        nRet = cameraCreate.MyCamera.MV_CC_OpenDevice_NET();
+                        if (MyCamera.MV_OK != nRet)
+                        {
+                            cameraCreate.MyCamera.MV_CC_DestroyDevice_NET();
+                            return false;
+                        }
+
+                        cameraCreate.IsCreate = true;
+                        return true;
+                    }
+                }
             }
 
-            return cameraCommands.OpenDevice(findDeviceList, indexSelectDevice);
+            return false;
         }
 
-        public BitmapSource StartGrab()
+        public bool DestroyCamera(string serialNumber)
         {
-            cameraCommands.StartGrab();
-            return cameraCommands.InImg;
+            CameraPerformance cameraToDestroy = creatingCamersCollection.FirstOrDefault(camera => camera.SerialNumber == serialNumber);
+
+            if (cameraToDestroy.IsGrab == true)
+            {
+                cameraToDestroy.StopGrab();
+            }
+
+            cameraToDestroy.MyCamera.MV_CC_CloseDevice_NET();
+            cameraToDestroy.MyCamera.MV_CC_DestroyDevice_NET();
+            creatingCamersCollection.Remove(cameraToDestroy);
+            cameraToDestroy.IsCreate = false;
+            return true;
         }
     }
 }
