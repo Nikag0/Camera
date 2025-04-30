@@ -75,7 +75,10 @@
                 ItemsSource="{Binding NameCamers, Mode=OneWay}" SelectedItem="{Binding NameSelectDevice, Mode=OneWayToSource}">
         </ComboBox>
 
-        <ComboBox x:Name="cbCreateDeviceList" Height="25" Width="250" Margin="550,10,0,0" Grid.Row="0"
+        <TextBlock Text="CreatedCamers:" Margin="550, 15, 0, 0" Grid.Row="0"
+                   HorizontalAlignment="Left" VerticalAlignment="Top"/>
+
+        <ComboBox x:Name="cbCreateDeviceList" Height="25" Width="250" Margin="550,35,0,0" Grid.Row="0"
                HorizontalAlignment="Left" VerticalAlignment="Top" 
                ItemsSource="{Binding NameCreateCamera, Mode=OneWay}">
         </ComboBox>

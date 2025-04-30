@@ -96,7 +96,10 @@ namespace Camera
                             return false;
                         }
 
-                        NameCreateCamers.Add("GEV: " + gigeInfo.chManufacturerName + " " + gigeInfo.chModelName + " (" + gigeInfo.chSerialNumber + ")");
+                        if (!NameCreateCamers.Contains("GEV: " + gigeInfo.chManufacturerName + " " + gigeInfo.chModelName + " (" + gigeInfo.chSerialNumber + ")"))
+                        {
+                            NameCreateCamers.Add("GEV: " + gigeInfo.chManufacturerName + " " + gigeInfo.chModelName + " (" + gigeInfo.chSerialNumber + ")");
+                        }
                         cameraCreate.IsCreate = true;
                         return true;
                     }
@@ -117,6 +120,7 @@ namespace Camera
 
             cameraToDestroy.Disconnect();
             cameraToDestroy.MyCamera.MV_CC_DestroyDevice_NET();
+            nameCreateCamers.Remove(cameraToDestroy.Name);
             creatingCamersCollection.Remove(cameraToDestroy);
             cameraToDestroy.IsCreate = false;
             return true;

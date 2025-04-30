@@ -19,7 +19,8 @@ namespace Camera
         private Thread m_hReceiveThread = null;
         private bool isCreate = false;
         private bool isGrab = false;
-        
+
+        public string Name { get; set; }
         public MyCamera MyCamera { get => myCamera; private set { myCamera = value; } }
         public BitmapSource InImg 
         { 
@@ -59,6 +60,7 @@ namespace Camera
             this.cameraInfo = cameraInfo;
             MyCamera.MV_GIGE_DEVICE_INFO_EX gigeInfo = (MyCamera.MV_GIGE_DEVICE_INFO_EX)MyCamera.ByteToStruct(cameraInfo.SpecialInfo.stGigEInfo, typeof(MyCamera.MV_GIGE_DEVICE_INFO_EX));
             SerialNumber = gigeInfo.chSerialNumber;
+            Name = "GEV: " + gigeInfo.chManufacturerName + " " + gigeInfo.chModelName + " (" + gigeInfo.chSerialNumber + ")";
         }
 
         private void ReceiveThreadProcess()

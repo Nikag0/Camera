@@ -184,7 +184,12 @@ namespace Camera
                 return;
             }
 
-            SelectCamera.StartGrab();
+            if (!SelectCamera.StartGrab())
+            {
+                Feedback = "Error start grab";
+                return;
+            }
+
             Feedback = "camera is grab";
         }
 
@@ -195,6 +200,7 @@ namespace Camera
                 Feedback = "Error stop grab";
                 return;
             }
+
             Feedback = "camera stop grab";
         }
 
