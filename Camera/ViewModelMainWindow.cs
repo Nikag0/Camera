@@ -20,6 +20,8 @@ using System.Runtime.InteropServices;
 using System.Windows.Threading;
 using System.Windows.Media.Imaging;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
+using System.Windows.Media.Media3D;
 
 namespace Camera
 {
@@ -31,19 +33,30 @@ namespace Camera
         private string feedback;
         private string nameSelectDevice;
         private static readonly Regex filterRegex = new Regex(@"\(([A-Z]{2}\d{7})\)");
-        private BitmapSource inImg;
         private string serialNumber;
         private bool areAnyDevices = false;
-        private ObservableCollection <CameraPerformance> creatingCamersCollection { get => cameraManager.CreatingCamersCollection; }
+        private BitmapSource inImg;
         private bool isCreate = false;
         private bool isGrab = false;
 
 
-        public ObservableCollection<CameraPerformance> CreatingCamersCollection
+        private ObservableCollection<string> nameCreateCamera { get => cameraManager.NameCreateCamers; }
+
+        public ObservableCollection<string> NameCreateCamera
         {
-            get => creatingCamersCollection;
+            get { return nameCreateCamera; }
+            set 
+            {
+                OnPropertyChanged();
+            }
+        }
+
+        public bool IsGrab
+        {
+            get =>  isGrab;
             set
             {
+                isGrab = value;
                 OnPropertyChanged();
             }
         }
@@ -55,15 +68,6 @@ namespace Camera
                 isCreate = value;
                 OnPropertyChanged();
             }
-        }       
-        public bool IsGrab
-        {
-            get => isGrab;
-            set
-            {
-                isGrab = value;
-                OnPropertyChanged();
-            }
         }
         public bool AreAnyDevices
         {
@@ -71,6 +75,7 @@ namespace Camera
 
             set 
             {
+                areAnyDevices = value;
                 OnPropertyChanged();
             }
         }
@@ -91,23 +96,34 @@ namespace Camera
             get => cameraManager.NameCamers;
             set
             {
+                cameraManager.NameCamers = value;
                 OnPropertyChanged();
             }
         }
 
         public BitmapSource InImg
         {
-            get => inImg;
+            get
+            {
+                return inImg;
+            }
             set
             {
-                inImg = value;
-                OnPropertyChanged();
+                if (value != null)
+                {
+                    inImg = value;
+                    OnPropertyChanged();
+                }    
+                else
+                {
+                    Feedback = "No image";
+                }
             }
         }
 
         public ICommand SearchDeviceCommand { get; }
         public ICommand CreateDeviceCommand { get; }
-        public ICommand CloseDeviceCommand { get; }
+        public ICommand DestroyDeviceCommand { get; }
         public ICommand StartGrabCommand { get; }
         public ICommand StopGrabCommand { get; }
         public string Feedback
@@ -125,7 +141,7 @@ namespace Camera
         {
             SearchDeviceCommand = new DelegateCommands(p => SearchDevice());
             CreateDeviceCommand = new DelegateCommands(p => CreateDevice());
-            CloseDeviceCommand = new DelegateCommands(p => ClosenDevice());
+            DestroyDeviceCommand = new DelegateCommands(p => DestroyDevice());
             StartGrabCommand = new DelegateCommands(p => StartGrab());
             StopGrabCommand = new DelegateCommands(p => StopGrab());
         }
@@ -135,6 +151,7 @@ namespace Camera
             if (!cameraManager.SearchСamera())
             {
                 Feedback = $"No device";
+                AreAnyDevices = false;
                 return;
             }
 
@@ -145,17 +162,24 @@ namespace Camera
 
         private void CreateDevice()
         {
+            if (selectCamera != null && IsCreate)
+            {
+                DestroyDevice();
+                return;
+            }
+
             if (!cameraManager.CameraCreate(serialNumber))
             {
                 Feedback = "The error of creating a camera";
                 return;
             }
 
+
             CameraSwitch();
             Feedback = "The camera is created";
         }
 
-        private void ClosenDevice()
+        private void DestroyDevice()
         {
             if (!cameraManager.DestroyCamera(serialNumber))
             {
@@ -163,33 +187,35 @@ namespace Camera
                 return;
             }
 
-            Feedback = "The camera is created";
+            IsCreate = selectCamera.IsCreate;
+            Feedback = "The camera is destroyed";
         }
 
         private void StartGrab()
         {
             if (selectCamera.IsGrab)
             {
-                Feedback = "camera is already grabbing";
-                //return;
+                StopGrab();
+                IsGrab = selectCamera.IsGrab;
+                return;
             }
 
             selectCamera.StartGrab();
             InImg = selectCamera.InImg;
+            IsGrab = selectCamera.IsGrab;
             Feedback = "camera is grab";
         }
 
         private void StopGrab()
         {
-            if (!selectCamera.IsGrab)
+            if (!selectCamera.StopGrab())
             {
-                Feedback = "camera is not grab";
+                Feedback = "Error stop grab";
+                return;
             }
-
-            selectCamera.StopGrab();
-            Feedback = "camera is grab";
+            IsGrab = selectCamera.IsGrab;
+            Feedback = "camera stop grab";
         }
-
 
         private void CameraSwitch()
         {
@@ -198,15 +224,15 @@ namespace Camera
                 return;
             }
 
-            selectCamera = CreatingCamersCollection.FirstOrDefault(camera => camera.SerialNumber == serialNumber);
+            selectCamera = cameraManager.CreatingCamersCollection.FirstOrDefault(camera => camera.SerialNumber == serialNumber);
 
             if (selectCamera == null)
             {
                 return;
             }
 
-            isCreate = selectCamera.IsCreate;
-            isGrab = selectCamera.IsGrab;
+            IsCreate = selectCamera.IsCreate;
+            IsGrab = selectCamera.IsGrab;
         }
 
         private string GetSerialNumber(string input)

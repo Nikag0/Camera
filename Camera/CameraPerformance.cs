@@ -17,37 +17,28 @@ namespace Camera
         private MyCamera.MV_CC_DEVICE_INFO cameraInfo = new MyCamera.MV_CC_DEVICE_INFO();
         private int nRet;
         private Thread m_hReceiveThread = null;
-        private bool isOpen = false;
-        private bool isGrab = false;
-        private string serialNumber;
         
         public MyCamera MyCamera { get => myCamera; private set { myCamera = value; } }
-        public BitmapSource InImg { get => inImg; private set { inImg = value; } }
-        public string SerialNumber { get => serialNumber; private set { serialNumber = value; } }
-        public bool IsCreate
-        {
-            get => isOpen;
-            set
-            {
-                isOpen = value;
+        public BitmapSource InImg 
+        { 
+            get => inImg; 
+
+            set 
+            { 
+                inImg = value;
                 OnPropertyChanged();
             }
         }
-        public bool IsGrab
-        {
-            get => isGrab;
-            set
-            {
-                isGrab = value;
-                OnPropertyChanged();
-            }
-        }
+        public string SerialNumber { get; private set; }
+        public bool IsCreate { get; set; }
+        public bool IsGrab { get; set; }
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        public CameraPerformance(MyCamera.MV_CC_DEVICE_INFO cameraInfo, string serialNubmer)
+        public CameraPerformance(MyCamera.MV_CC_DEVICE_INFO cameraInfo)
         {
             this.cameraInfo = cameraInfo;
-            this.serialNumber = serialNubmer;
+            MyCamera.MV_GIGE_DEVICE_INFO_EX gigeInfo = (MyCamera.MV_GIGE_DEVICE_INFO_EX)MyCamera.ByteToStruct(cameraInfo.SpecialInfo.stGigEInfo, typeof(MyCamera.MV_GIGE_DEVICE_INFO_EX));
+            SerialNumber = gigeInfo.chSerialNumber;
         }
 
         private void ReceiveThreadProcess()
@@ -58,7 +49,7 @@ namespace Camera
             MyCamera.MV_DISPLAY_FRAME_INFO_EX stDisplayInfoEx = new MyCamera.MV_DISPLAY_FRAME_INFO_EX();
             int nRet = MyCamera.MV_OK;
 
-            while (isGrab)
+            while (IsGrab)
             {
                 nRet = myCamera.MV_CC_GetImageBuffer_NET(ref stFrameInfo, 1000);
                 if (nRet == MyCamera.MV_OK)
@@ -69,7 +60,7 @@ namespace Camera
                     BitmapSource bitmapSource = BitmapSource.Create(width, height, 96, 96, PixelFormats.Gray8, null, stFrameInfo.pBufAddr, (int)stFrameInfo.stFrameInfo.nFrameLen, width * 1);
                     bitmapSource.Freeze();
 
-                    inImg = bitmapSource;
+                    InImg = bitmapSource;
 
                     myCamera.MV_CC_DisplayOneFrame_NET(ref stDisplayInfo);
                     myCamera.MV_CC_FreeImageBuffer_NET(ref stFrameInfo);
@@ -86,7 +77,7 @@ namespace Camera
             nRet = myCamera.MV_CC_StartGrabbing_NET();
             if (MyCamera.MV_OK != nRet)
             {
-                isGrab = false;
+                IsGrab = false;
                 return false;
             }
 
@@ -95,15 +86,34 @@ namespace Camera
 
         public bool StopGrab()
         {
-            isGrab = false;
+            IsGrab = false;
 
             int nRet = myCamera.MV_CC_StopGrabbing_NET();
             if (nRet != MyCamera.MV_OK)
             {
+                IsGrab = true;
                 return false;
             }
 
-            IsGrab = false;
+            return true;
+        }
+
+        public bool Connect()
+        {
+            nRet = myCamera.MV_CC_OpenDevice_NET();
+            if (MyCamera.MV_OK != nRet)
+            {
+                return false;
+            }
+            return true;
+        }
+        public bool Disconnect()
+        {
+            nRet = myCamera.MV_CC_CloseDevice_NET();
+            if (MyCamera.MV_OK != nRet)
+            {
+                return false;
+            }
             return true;
         }
 

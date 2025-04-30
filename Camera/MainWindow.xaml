@@ -18,45 +18,44 @@
                 HorizontalAlignment="Left" VerticalAlignment="Top" 
                 Command="{Binding SearchDeviceCommand}"/>
 
-        <Button Height="25" Width="60" Margin="70,0,0,5" Grid.Row="0" 
-                HorizontalAlignment="Left" VerticalAlignment="Bottom">
+        <Button x:Name="OpenCloseButton" Height="25" Width="60" Margin="70,0,0,5" Grid.Row="0" 
+                HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                Command="{Binding CreateDeviceCommand}">
             <Button.Style>
                 <Style TargetType="Button">
-                    <Setter Property="Content" Value="Open"/>
-                    <Setter Property="Command" Value="{Binding CreateDeviceCommand}" />
-                    <!--<Setter Property="IsEnabled" Value="False"/>-->
+                    <Setter Property="IsEnabled" Value="False"/>
+                    <Setter Property="Content" Value="Create"/>
                     <Style.Triggers >
-
-                        <DataTrigger Binding="{Binding IsCreate}" Value="True ">
-                            <Setter Property="Content" Value="Destroy" />
-                            <Setter Property="Command" Value="{Binding CloseDeviceCommand}" />
+                        
+                        <DataTrigger Binding="{Binding AreAnyDevices}" Value="True">
+                            <Setter Property="IsEnabled" Value="True" />
                         </DataTrigger>
 
-                        <!--<DataTrigger Binding="{Binding AreAnyDevices}" Value="True">
-                            <Setter Property="IsEnabled" Value="True" />
-                        </DataTrigger>-->
+                        <DataTrigger Binding="{Binding IsCreate}" Value="True">
+                            <Setter Property="Content" Value="Destroy" />
+                        </DataTrigger>
 
                     </Style.Triggers>
                 </Style>
             </Button.Style>
         </Button>
 
-        <Button Height="25" Width="60" Margin="0,0,10,5" Grid.Row="0" 
-                HorizontalAlignment="Left" VerticalAlignment="Bottom">
+        <Button x:Name="StartStopGrabButton" Height="25" Width="60" Margin="0,0,10,5" Grid.Row="0" 
+                HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                Command="{Binding StartGrabCommand}">
+            
             <Button.Style>
                 <Style TargetType="Button">
-                    <Setter Property="Content" Value="Start view"/>
-                    <Setter Property="Command" Value="{Binding StartGrabCommand}" />
-                    <!--<Setter Property="IsEnabled" Value="False"/>-->
+                    <Setter Property="Content" Value="Start grab"/>
+                    <Setter Property="IsEnabled" Value="False"/>
                     <Style.Triggers >
 
-                        <!--<DataTrigger Binding="{Binding AreAnyDevices}" Value="True">
+                        <DataTrigger Binding="{Binding IsCreate}" Value="True">
                             <Setter Property="IsEnabled" Value="True" />
-                        </DataTrigger>-->
+                        </DataTrigger>
 
                         <DataTrigger Binding="{Binding IsGrab}" Value="True ">
-                            <Setter Property="Content" Value="Stop view" />
-                            <Setter Property="Command" Value="{Binding StopGrabCommand}" />
+                            <Setter Property="Content" Value="Stop grab" />
                         </DataTrigger>
 
                     </Style.Triggers>
@@ -78,7 +77,7 @@
 
         <ComboBox x:Name="cbCreateDeviceList" Height="25" Width="250" Margin="550,10,0,0" Grid.Row="0"
                HorizontalAlignment="Left" VerticalAlignment="Top" 
-               ItemsSource="{Binding CreatingCamersCollection, Mode=OneWay}">
+               ItemsSource="{Binding NameCreateCamera, Mode=OneWay}">
         </ComboBox>
 
         <Image x:Name="CameraImage1" Stretch="Uniform" Width="770" Height="340" Margin="10,0,0,0" Grid.Row="1"
