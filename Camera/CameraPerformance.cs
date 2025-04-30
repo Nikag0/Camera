@@ -17,6 +17,8 @@ namespace Camera
         private MyCamera.MV_CC_DEVICE_INFO cameraInfo = new MyCamera.MV_CC_DEVICE_INFO();
         private int nRet;
         private Thread m_hReceiveThread = null;
+        private bool isCreate = false;
+        private bool isGrab = false;
         
         public MyCamera MyCamera { get => myCamera; private set { myCamera = value; } }
         public BitmapSource InImg 
@@ -30,8 +32,26 @@ namespace Camera
             }
         }
         public string SerialNumber { get; private set; }
-        public bool IsCreate { get; set; }
-        public bool IsGrab { get; set; }
+        public bool IsCreate 
+        {
+            get => isCreate;
+
+            set
+            {
+                isCreate = value;
+                OnPropertyChanged();
+            }
+        }
+        public bool IsGrab  
+        {
+            get => isGrab;
+
+            set
+            {
+                isGrab = value;
+                OnPropertyChanged();
+            }
+        }
         public event PropertyChangedEventHandler? PropertyChanged;
 
         public CameraPerformance(MyCamera.MV_CC_DEVICE_INFO cameraInfo)

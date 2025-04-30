@@ -31,7 +31,7 @@
                             <Setter Property="IsEnabled" Value="True" />
                         </DataTrigger>
 
-                        <DataTrigger Binding="{Binding IsCreate}" Value="True">
+                        <DataTrigger Binding="{Binding SelectCamera.IsCreate}" Value="True">
                             <Setter Property="Content" Value="Destroy" />
                         </DataTrigger>
 
@@ -50,11 +50,11 @@
                     <Setter Property="IsEnabled" Value="False"/>
                     <Style.Triggers >
 
-                        <DataTrigger Binding="{Binding IsCreate}" Value="True">
+                        <DataTrigger Binding="{Binding SelectCamera.IsCreate}" Value="True">
                             <Setter Property="IsEnabled" Value="True" />
                         </DataTrigger>
 
-                        <DataTrigger Binding="{Binding IsGrab}" Value="True ">
+                        <DataTrigger Binding="{Binding SelectCamera.IsGrab}" Value="True ">
                             <Setter Property="Content" Value="Stop grab" />
                         </DataTrigger>
 
@@ -82,7 +82,7 @@
 
         <Image x:Name="CameraImage1" Stretch="Uniform" Width="770" Height="340" Margin="10,0,0,0" Grid.Row="1"
                 HorizontalAlignment="Left" VerticalAlignment="Bottom"  
-                Source="{Binding InImg}">
+                Source="{Binding SelectCamera.InImg}">
 
             <Image.Effect>
                 <DropShadowEffect ShadowDepth="0" 
