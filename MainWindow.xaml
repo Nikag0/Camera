@@ -1,0 +1,240 @@
+﻿<Window x:Class="Camera.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Camera" d:DataContext="{d:DesignInstance Type=local:ViewModelMainWindow}"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="60*"></RowDefinition>
+            <RowDefinition Height="390*"></RowDefinition>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="150"></ColumnDefinition>
+                <ColumnDefinition Width="400"></ColumnDefinition>
+                <ColumnDefinition Width="250"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30"></RowDefinition>
+                <RowDefinition Height="30"></RowDefinition>
+            </Grid.RowDefinitions>
+
+            <Button Content="Search device" Height="25" Width="130"  Margin="6,0,0,0" Grid.Row="0" Grid.Column="0" 
+                HorizontalAlignment="Left" VerticalAlignment="Center" 
+                Command="{Binding SearchDeviceCommand}"/>
+
+            <Button x:Name="StartStopGrabButton" Height="26" Width="60" Margin="6,0,0,0" Grid.Row="1" Grid.Column="0" 
+                HorizontalAlignment="Left" VerticalAlignment="Center"
+                Command="{Binding StartGrabCommand}">
+
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Content" Value="Start grab"/>
+                        <Setter Property="IsEnabled" Value="False"/>
+                        <Style.Triggers >
+
+                            <DataTrigger Binding="{Binding SelectCamera.IsCreate}" Value="True">
+                                <Setter Property="IsEnabled" Value="True" />
+                            </DataTrigger>
+
+                            <DataTrigger Binding="{Binding SelectCamera.IsGrab}" Value="True ">
+                                <Setter Property="Content" Value="Stop grab" />
+                            </DataTrigger>
+
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+
+            <Button x:Name="OpenCloseButton" Height="25" Width="60" Margin="76,0,0,0" Grid.Row="1" Grid.Column="0"  
+                HorizontalAlignment="Left" VerticalAlignment="Center"
+                Command="{Binding CreateDeviceCommand}">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="IsEnabled" Value="False"/>
+                        <Setter Property="Content" Value="Create"/>
+                        <Style.Triggers >
+
+                            <DataTrigger Binding="{Binding AreAnyDevices}" Value="True">
+                                <Setter Property="IsEnabled" Value="True" />
+                            </DataTrigger>
+
+                            <DataTrigger Binding="{Binding SelectCamera.IsCreate}" Value="True">
+                                <Setter Property="Content" Value="Destroy" />
+                            </DataTrigger>
+
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+
+            <ComboBox x:Name="cbDeviceList" Height="25" Width="400" Margin="0,0,0,0" Grid.Row="0" Grid.Column="1"
+                      HorizontalAlignment="Left" VerticalAlignment="Center" 
+                      ItemsSource="{Binding NameCamers, Mode=OneWay}" SelectedItem="{Binding NameSelectDevice, Mode=OneWayToSource}" RenderTransformOrigin="0.5,0.5">
+            </ComboBox>
+
+            <TextBlock Text="Message:" Height="20" Width="50" Grid.Row="1" Grid.Column="1"
+                      HorizontalAlignment="Left" VerticalAlignment="Center" />
+
+            <TextBlock Text="{Binding Feedback}" Height="20" Width="250" Margin="55,0,0,0" Grid.Row="1" Grid.Column="1"
+                      HorizontalAlignment="Left" VerticalAlignment="Center"/>
+
+        </Grid>
+
+        <Grid Grid.Row="1">
+
+            <Grid.ColumnDefinitions >
+                <ColumnDefinition Width="550"/>
+                <ColumnDefinition Width="250"/>
+            </Grid.ColumnDefinitions>
+
+            <Grid Grid.Column="1" HorizontalAlignment="Right">
+
+                <Grid.RowDefinitions >
+                    <RowDefinition Height="40"></RowDefinition>
+                    <RowDefinition Height="20"></RowDefinition>
+                    <RowDefinition Height="200"></RowDefinition>
+                </Grid.RowDefinitions>
+
+
+                <TextBlock Text="CreateCamers:" Grid.Row="0"
+                           HorizontalAlignment="Left" VerticalAlignment="Top" Height="16" Width="76"/>
+
+                <ComboBox x:Name="cbCreateDeviceList" Height="25" Width="249" Grid.Row="0"
+                            HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                            ItemsSource="{Binding NameCreateCamera, Mode=OneWay}"/>
+
+                <TextBlock Text="Parametrs:" Width="55" Height="20" Grid.Row="1"
+                            HorizontalAlignment="Left" VerticalAlignment="Center"/>
+
+                <Grid Grid.Row="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="20"></RowDefinition>
+                        <RowDefinition Height="20"></RowDefinition>
+                        <RowDefinition Height="20"></RowDefinition>
+                        <RowDefinition Height="20"></RowDefinition>
+                    </Grid.RowDefinitions>
+
+                    <Grid.ColumnDefinitions >
+                        <ColumnDefinition Width="125"/>
+                        <ColumnDefinition Width="125"/>
+                    </Grid.ColumnDefinitions>
+
+
+                    <TextBlock Text="Exposure Time:" Width="80" Height="20" Grid.Row="0"
+                                HorizontalAlignment="Left" VerticalAlignment="Top"/>
+
+                    <TextBox Width="70" Height="15"  Grid.Column="1" Grid.Row="0"
+                                HorizontalAlignment="Left" VerticalAlignment="Center"
+                                Text="{Binding SelectCamera.ExposureTime, Mode=TwoWay}">
+
+                        <TextBox.Style>
+                            <Style TargetType="TextBox">
+                                <Setter Property="IsEnabled" Value="False"/>
+                                <Style.Triggers >
+
+                                    <DataTrigger Binding="{Binding SelectCamera.IsCreate}" Value="True">
+                                        <Setter Property="IsEnabled" Value="True" />
+                                    </DataTrigger>
+
+                                </Style.Triggers>
+                            </Style>
+                        </TextBox.Style>
+                    </TextBox>
+
+                    <TextBlock Text="Gain:" Width="55" Height="20" Grid.Row="1" Grid.Column="0"
+                                HorizontalAlignment="Left" VerticalAlignment="Center"/>
+
+                    <TextBox Width="70" Height="15" Grid.Row="1" Grid.Column="1"
+                                HorizontalAlignment="Left" VerticalAlignment="Center" 
+                                Text="{Binding SelectCamera.Gain, Mode=TwoWay}">
+                        <TextBox.Style>
+                            <Style TargetType="TextBox">
+                                <Setter Property="IsEnabled" Value="False"/>
+                                <Style.Triggers >
+
+                                    <DataTrigger Binding="{Binding SelectCamera.IsCreate}" Value="True">
+                                        <Setter Property="IsEnabled" Value="True" />
+                                    </DataTrigger>
+
+                                </Style.Triggers>
+                            </Style>
+                        </TextBox.Style>
+                    </TextBox>
+
+                    <TextBlock Text="Frame Rate:" Width="60" Height="20" Grid.Row="2" Grid.Column="0"
+                                HorizontalAlignment="Left" VerticalAlignment="Top"/>
+
+                    <TextBox Width="70" Height="15" Grid.Row="2" Grid.Column="1"
+                                HorizontalAlignment="Left" VerticalAlignment="Center"
+                                Text="{Binding SelectCamera.FrameRate, Mode=TwoWay}">
+
+                        <TextBox.Style>
+                            <Style TargetType="TextBox">
+                                <Setter Property="IsEnabled" Value="False"/>
+                                <Style.Triggers >
+
+                                    <DataTrigger Binding="{Binding SelectCamera.IsCreate}" Value="True">
+                                        <Setter Property="IsEnabled" Value="True" />
+                                    </DataTrigger>
+
+                                </Style.Triggers>
+                            </Style>
+                        </TextBox.Style>
+                    </TextBox>
+
+                    <Button Content ="Get Param" Height="20" Width="60" Grid.Row="3" Grid.Column="0"
+                                HorizontalAlignment="Left" VerticalAlignment="Center"
+                                Command="{Binding GetParamCommand}">
+
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="IsEnabled" Value="False"/>
+                                <Style.Triggers >
+
+                                    <DataTrigger Binding="{Binding SelectCamera.IsCreate}" Value="True">
+                                        <Setter Property="IsEnabled" Value="True" />
+                                    </DataTrigger>
+
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+
+                    <Button Content ="Set Param" Height="20" Width="60" Grid.Row="3" Grid.Column="1"
+                            HorizontalAlignment="Left" VerticalAlignment="Center"
+                            Command="{Binding SetParamCommand}">
+
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="IsEnabled" Value="False"/>
+                                <Style.Triggers >
+
+                                    <DataTrigger Binding="{Binding SelectCamera.IsCreate}" Value="True">
+                                        <Setter Property="IsEnabled" Value="True" />
+                                    </DataTrigger>
+
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </Grid>
+            </Grid>
+
+            <Grid Grid.Column="0">
+                <Image x:Name="CameraImage1" Width="Auto" Height="Auto"
+                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  
+                        Source="{Binding SelectCamera.InImg}" >
+                    
+                    
+                </Image>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>
