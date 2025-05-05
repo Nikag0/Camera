@@ -1,8 +1,10 @@
 ﻿using MvCamCtrl.NET;
 using MvCameraControl;
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
+using System.Net;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows.Media;
@@ -15,11 +17,17 @@ namespace Camera
         private BitmapSource inImg;
         private MyCamera myCamera = new MyCamera();
         private MyCamera.MV_CC_DEVICE_INFO cameraInfo = new MyCamera.MV_CC_DEVICE_INFO();
+        private IPAddress ipAddress;
+        private byte[] ipBytes;
         private int nRet;
         private Thread m_hReceiveThread = null;
+        private string exposureTime;
+        private string gain;
+        private string frameRate;
         private bool isCreate = false;
         private bool isGrab = false;
 
+        public string Ip { get; set; }
         public string Name { get; set; }
         public MyCamera MyCamera { get => myCamera; private set { myCamera = value; } }
         public BitmapSource InImg 
@@ -33,6 +41,36 @@ namespace Camera
             }
         }
         public string SerialNumber { get; private set; }
+        public string ExposureTime
+        {
+            get => exposureTime;
+
+            set
+            {
+                exposureTime = value;
+                OnPropertyChanged();
+            }
+        }
+        public string Gain
+        {
+            get => gain;
+
+            set
+            {
+                gain = value;
+                OnPropertyChanged();
+            }
+        }
+        public string FrameRate
+        {
+            get => frameRate;
+
+            set
+            {
+                frameRate = value;
+                OnPropertyChanged();
+            }
+        }
         public bool IsCreate 
         {
             get => isCreate;
@@ -61,6 +99,9 @@ namespace Camera
             MyCamera.MV_GIGE_DEVICE_INFO_EX gigeInfo = (MyCamera.MV_GIGE_DEVICE_INFO_EX)MyCamera.ByteToStruct(cameraInfo.SpecialInfo.stGigEInfo, typeof(MyCamera.MV_GIGE_DEVICE_INFO_EX));
             SerialNumber = gigeInfo.chSerialNumber;
             Name = "GEV: " + gigeInfo.chManufacturerName + " " + gigeInfo.chModelName + " (" + gigeInfo.chSerialNumber + ")";
+            ipBytes = BitConverter.GetBytes(gigeInfo.nCurrentIp);
+            ipAddress = new IPAddress(ipBytes);
+            Ip = ipAddress.ToString();
         }
 
         private void ReceiveThreadProcess()
@@ -137,6 +178,65 @@ namespace Camera
                 return false;
             }
             return true;
+        }
+
+        public void GetParam()
+        {
+            MyCamera.MVCC_FLOATVALUE stParam = new MyCamera.MVCC_FLOATVALUE();
+            nRet = myCamera.MV_CC_GetFloatValue_NET("ExposureTime", ref stParam);
+            if (MyCamera.MV_OK == nRet)
+            {
+                ExposureTime = stParam.fCurValue.ToString("F1");
+            }
+
+            nRet = myCamera.MV_CC_GetFloatValue_NET("Gain", ref stParam);
+            if (MyCamera.MV_OK == nRet)
+            {
+                Gain = stParam.fCurValue.ToString("F1");
+            }
+
+            nRet = myCamera.MV_CC_GetFloatValue_NET("ResultingFrameRate", ref stParam);
+            if (MyCamera.MV_OK == nRet)
+            {
+                FrameRate = stParam.fCurValue.ToString("F1");
+            }
+        }
+
+        public string SetParam()
+        
+        {
+            try
+            {
+                float.Parse(ExposureTime);
+                float.Parse(Gain);
+                float.Parse(FrameRate);
+            }
+            catch
+            {
+                return "Please enter correct type!";
+            }
+
+            myCamera.MV_CC_SetEnumValue_NET("ExposureAuto", 0);
+            int nRet = myCamera.MV_CC_SetFloatValue_NET("ExposureTime", float.Parse(ExposureTime));
+            if (nRet != MyCamera.MV_OK)
+            {
+                return "Set Exposure Time Fail!";
+            }
+
+            myCamera.MV_CC_SetEnumValue_NET("GainAuto", 0);
+            nRet = myCamera.MV_CC_SetFloatValue_NET("Gain", float.Parse(Gain));
+            if (nRet != MyCamera.MV_OK)
+            {
+                return "Set Gain Fail!";
+            }
+
+            nRet = myCamera.MV_CC_SetFloatValue_NET("AcquisitionFrameRate", float.Parse(FrameRate));
+            if (nRet != MyCamera.MV_OK)
+            {
+                return "Set Frame Rate Fail!";
+            }
+
+            return "Parametrs Setter";
         }
 
         public void OnPropertyChanged([CallerMemberName] string prop = "")

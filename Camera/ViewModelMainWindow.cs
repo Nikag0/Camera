@@ -113,6 +113,8 @@ namespace Camera
         public ICommand DestroyDeviceCommand { get; }
         public ICommand StartGrabCommand { get; }
         public ICommand StopGrabCommand { get; }
+        public ICommand GetParamCommand { get; }
+        public ICommand SetParamCommand { get; }
         public string Feedback
         {
             get => feedback;
@@ -131,6 +133,8 @@ namespace Camera
             DestroyDeviceCommand = new DelegateCommands(p => DestroyDevice());
             StartGrabCommand = new DelegateCommands(p => StartGrab());
             StopGrabCommand = new DelegateCommands(p => StopGrab());
+            GetParamCommand = new DelegateCommands(propa => GetParam());
+            SetParamCommand = new DelegateCommands(propa => SetParam());
         }
 
         private void SearchDevice()
@@ -164,6 +168,7 @@ namespace Camera
 
             CameraSwitch();
             Feedback = "The camera is created";
+            SelectCamera.GetParam();
         }
 
         private void DestroyDevice()
@@ -202,6 +207,15 @@ namespace Camera
             }
 
             Feedback = "camera stop grab";
+        }
+
+        private void SetParam()
+        {
+            Feedback = SelectCamera.SetParam();
+        } 
+        private void GetParam()
+        {
+            SelectCamera.GetParam();
         }
 
         private void CameraSwitch()
