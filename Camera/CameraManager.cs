@@ -74,25 +74,18 @@ namespace Camera
 
             for (int i = 0; i < findDeviceList.nDeviceNum; i++)
             {
-                MyCamera.MV_CC_DEVICE_INFO deviceInfo = (MyCamera.MV_CC_DEVICE_INFO)Marshal.PtrToStructure(findDeviceList.pDeviceInfo[i], typeof(MyCamera.MV_CC_DEVICE_INFO));
+                MyCamera.MV_CC_DEVICE_INFO cameraInfo = (MyCamera.MV_CC_DEVICE_INFO)Marshal.PtrToStructure(findDeviceList.pDeviceInfo[i], typeof(MyCamera.MV_CC_DEVICE_INFO));
 
-                if (deviceInfo.nTLayerType == MyCamera.MV_GIGE_DEVICE)
+                if (cameraInfo.nTLayerType == MyCamera.MV_GIGE_DEVICE)
                 {
-                    MyCamera.MV_GIGE_DEVICE_INFO_EX gigeInfo = (MyCamera.MV_GIGE_DEVICE_INFO_EX)MyCamera.ByteToStruct(deviceInfo.SpecialInfo.stGigEInfo, typeof(MyCamera.MV_GIGE_DEVICE_INFO_EX));
+                    MyCamera.MV_GIGE_DEVICE_INFO_EX gigeInfo = (MyCamera.MV_GIGE_DEVICE_INFO_EX)MyCamera.ByteToStruct(cameraInfo.SpecialInfo.stGigEInfo, typeof(MyCamera.MV_GIGE_DEVICE_INFO_EX));
 
                     if (gigeInfo.chSerialNumber == serialNumber)
                     {
-                        creatingCamersCollection.Add(cameraCreate = new CameraPerformance(deviceInfo));
-                        
-                        int nRet = cameraCreate.MyCamera.MV_CC_CreateDevice_NET(ref deviceInfo);
-                        if (MyCamera.MV_OK != nRet)
-                        {
-                            return false;
-                        }
+                        creatingCamersCollection.Add(cameraCreate = new CameraPerformance(cameraInfo));
 
-                        if (!cameraCreate.Connect())
+                        if (!cameraCreate.Create())
                         {
-                            cameraCreate.MyCamera.MV_CC_DestroyDevice_NET();
                             return false;
                         }
 
@@ -100,7 +93,6 @@ namespace Camera
                         {
                             NameCreateCamers.Add("GEV: " + gigeInfo.chManufacturerName + " " + gigeInfo.chModelName + " (" + gigeInfo.chSerialNumber + ")");
                         }
-                        cameraCreate.IsCreate = true;
                         return true;
                     }
                 }
@@ -118,11 +110,13 @@ namespace Camera
                 cameraToDestroy.StopGrab();
             }
 
-            cameraToDestroy.Disconnect();
-            cameraToDestroy.MyCamera.MV_CC_DestroyDevice_NET();
+            if (!cameraToDestroy.Destroy())
+            {
+                return false;
+            }
+
             nameCreateCamers.Remove(cameraToDestroy.Name);
             creatingCamersCollection.Remove(cameraToDestroy);
-            cameraToDestroy.IsCreate = false;
             return true;
         }
     }

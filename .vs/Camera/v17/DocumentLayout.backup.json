@@ -3,24 +3,20 @@
   "WorkspaceRootPath": "D:\\Camera\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{71AE09F6-9B54-4F6D-95E3-20A5E3EABBB8}|Camera\\Camera.csproj|d:\\camera\\camera\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
-      "RelativeMoniker": "D:0:0:{71AE09F6-9B54-4F6D-95E3-20A5E3EABBB8}|Camera\\Camera.csproj|solutionrelative:camera\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{71AE09F6-9B54-4F6D-95E3-20A5E3EABBB8}|Camera\\Camera.csproj|d:\\camera\\camera\\cameraperformance.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{71AE09F6-9B54-4F6D-95E3-20A5E3EABBB8}|Camera\\Camera.csproj|solutionrelative:camera\\cameraperformance.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{71AE09F6-9B54-4F6D-95E3-20A5E3EABBB8}|Camera\\Camera.csproj|d:\\camera\\camera\\cameramanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{71AE09F6-9B54-4F6D-95E3-20A5E3EABBB8}|Camera\\Camera.csproj|solutionrelative:camera\\cameramanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{71AE09F6-9B54-4F6D-95E3-20A5E3EABBB8}|Camera\\Camera.csproj|d:\\camera\\camera\\viewmodelmainwindow.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{71AE09F6-9B54-4F6D-95E3-20A5E3EABBB8}|Camera\\Camera.csproj|solutionrelative:camera\\viewmodelmainwindow.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{71AE09F6-9B54-4F6D-95E3-20A5E3EABBB8}|Camera\\Camera.csproj|d:\\camera\\camera\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{71AE09F6-9B54-4F6D-95E3-20A5E3EABBB8}|Camera\\Camera.csproj|solutionrelative:camera\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{71AE09F6-9B54-4F6D-95E3-20A5E3EABBB8}|Camera\\Camera.csproj|d:\\camera\\camera\\cameramanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{71AE09F6-9B54-4F6D-95E3-20A5E3EABBB8}|Camera\\Camera.csproj|solutionrelative:camera\\cameramanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{71AE09F6-9B54-4F6D-95E3-20A5E3EABBB8}|Camera\\Camera.csproj|d:\\camera\\camera\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{71AE09F6-9B54-4F6D-95E3-20A5E3EABBB8}|Camera\\Camera.csproj|solutionrelative:camera\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
     }
   ],
   "DocumentGroupContainers": [
@@ -30,8 +26,22 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 9,
+          "SelectedChildIndex": 6,
           "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "CameraManager.cs",
+              "DocumentMoniker": "D:\\Camera\\Camera\\CameraManager.cs",
+              "RelativeDocumentMoniker": "Camera\\CameraManager.cs",
+              "ToolTip": "D:\\Camera\\Camera\\CameraManager.cs",
+              "RelativeToolTip": "Camera\\CameraManager.cs",
+              "ViewState": "AgIAAEQAAAAAAAAAAAAAAGUAAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-04-22T07:44:07.423Z",
+              "IsPinned": true,
+              "EditorCaption": ""
+            },
             {
               "$type": "Bookmark",
               "Name": "ST:129:0:{75188d03-9892-4ae2-abf1-207126247ce5}"
@@ -54,64 +64,38 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "MainWindow.xaml.cs",
-              "DocumentMoniker": "D:\\Camera\\Camera\\MainWindow.xaml.cs",
-              "RelativeDocumentMoniker": "Camera\\MainWindow.xaml.cs",
-              "ToolTip": "D:\\Camera\\Camera\\MainWindow.xaml.cs",
-              "RelativeToolTip": "Camera\\MainWindow.xaml.cs",
-              "ViewState": "AgIAAAgAAAAAAAAAAAAiwBwAAAAFAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-05-05T09:14:47.301Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "CameraManager.cs",
-              "DocumentMoniker": "D:\\Camera\\Camera\\CameraManager.cs",
-              "RelativeDocumentMoniker": "Camera\\CameraManager.cs",
-              "ToolTip": "D:\\Camera\\Camera\\CameraManager.cs",
-              "RelativeToolTip": "Camera\\CameraManager.cs",
-              "ViewState": "AgIAAFsAAAAAAAAAAAAAwH8AAAAFAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-04-22T07:44:07.423Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 0,
               "Title": "CameraPerformance.cs",
               "DocumentMoniker": "D:\\Camera\\Camera\\CameraPerformance.cs",
               "RelativeDocumentMoniker": "Camera\\CameraPerformance.cs",
-              "ToolTip": "D:\\Camera\\Camera\\CameraPerformance.cs",
-              "RelativeToolTip": "Camera\\CameraPerformance.cs",
-              "ViewState": "AgIAAMQAAAAAAAAAAAAswNoAAABgAAAAAAAAAA==",
+              "ToolTip": "D:\\Camera\\Camera\\CameraPerformance.cs*",
+              "RelativeToolTip": "Camera\\CameraPerformance.cs*",
+              "ViewState": "AgIAAB8AAAAAAAAAAIA5wDgAAAAUAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-04-25T07:43:26.896Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 1,
               "Title": "ViewModelMainWindow.cs",
               "DocumentMoniker": "D:\\Camera\\Camera\\ViewModelMainWindow.cs",
               "RelativeDocumentMoniker": "Camera\\ViewModelMainWindow.cs",
               "ToolTip": "D:\\Camera\\Camera\\ViewModelMainWindow.cs",
               "RelativeToolTip": "Camera\\ViewModelMainWindow.cs",
-              "ViewState": "AgIAAMEAAAAAAAAAAAAIwNgAAAAJAAAAAAAAAA==",
+              "ViewState": "AgIAAFkAAAAAAAAAAIAzwOEAAAAIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-04-11T08:20:30.343Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 3,
               "Title": "MainWindow.xaml",
               "DocumentMoniker": "D:\\Camera\\Camera\\MainWindow.xaml",
               "RelativeDocumentMoniker": "Camera\\MainWindow.xaml",
-              "ToolTip": "D:\\Camera\\Camera\\MainWindow.xaml*",
-              "RelativeToolTip": "Camera\\MainWindow.xaml*",
+              "ToolTip": "D:\\Camera\\Camera\\MainWindow.xaml",
+              "RelativeToolTip": "Camera\\MainWindow.xaml",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
               "WhenOpened": "2025-04-11T08:08:04.725Z",
               "EditorCaption": ""

@@ -115,6 +115,8 @@ namespace Camera
         public ICommand StopGrabCommand { get; }
         public ICommand GetParamCommand { get; }
         public ICommand SetParamCommand { get; }
+        public ICommand GetAutoExposureCommand { get; }
+        public ICommand SetAutoExposureCommand { get; }
         public string Feedback
         {
             get => feedback;
@@ -135,6 +137,8 @@ namespace Camera
             StopGrabCommand = new DelegateCommands(p => StopGrab());
             GetParamCommand = new DelegateCommands(propa => GetParam());
             SetParamCommand = new DelegateCommands(propa => SetParam());
+            GetAutoExposureCommand = new DelegateCommands(propa => GetAutoExposure());
+            SetAutoExposureCommand = new DelegateCommands(propa => SetAutoExposure());
         }
 
         private void SearchDevice()
@@ -216,6 +220,16 @@ namespace Camera
         private void GetParam()
         {
             SelectCamera.GetParam();
+        }
+
+        private void GetAutoExposure()
+        {
+            SelectCamera.GetAutoExposure();
+        }
+
+        private void SetAutoExposure()
+        {
+            Feedback = SelectCamera.SetAutoExposure();
         }
 
         private void CameraSwitch()

@@ -21,15 +21,55 @@ namespace Camera
         private byte[] ipBytes;
         private int nRet;
         private Thread m_hReceiveThread = null;
+        private bool isCreate = false;
+        private bool isGrab = false;
         private string exposureTime;
         private string gain;
         private string frameRate;
-        private bool isCreate = false;
-        private bool isGrab = false;
+        private string timeLower;
+        private string timeUpper;
 
-        public string Ip { get; set; }
-        public string Name { get; set; }
-        public MyCamera MyCamera { get => myCamera; private set { myCamera = value; } }
+        public string TimeLower
+        {
+            get { return timeLower; }
+            set 
+            {
+                timeLower = value; 
+                OnPropertyChanged();
+            }
+        }
+        public string TimeUpper
+        {
+            get { return timeUpper; }
+            set
+            {
+                timeUpper = value;
+                OnPropertyChanged();
+            }
+        }
+        public string SerialNumber { get; private set; }
+        public string Name { get; private set; }
+        public string Ip { get; private set; }
+        public bool IsCreate
+        {
+            get => isCreate;
+
+            private set
+            {
+                isCreate = value;
+                OnPropertyChanged();
+            }
+        }
+        public bool IsGrab
+        {
+            get => isGrab;
+
+            private set
+            {
+                isGrab = value;
+                OnPropertyChanged();
+            }
+        }
         public BitmapSource InImg 
         { 
             get => inImg; 
@@ -40,7 +80,6 @@ namespace Camera
                 OnPropertyChanged();
             }
         }
-        public string SerialNumber { get; private set; }
         public string ExposureTime
         {
             get => exposureTime;
@@ -71,26 +110,7 @@ namespace Camera
                 OnPropertyChanged();
             }
         }
-        public bool IsCreate 
-        {
-            get => isCreate;
 
-            set
-            {
-                isCreate = value;
-                OnPropertyChanged();
-            }
-        }
-        public bool IsGrab  
-        {
-            get => isGrab;
-
-            set
-            {
-                isGrab = value;
-                OnPropertyChanged();
-            }
-        }
         public event PropertyChangedEventHandler? PropertyChanged;
 
         public CameraPerformance(MyCamera.MV_CC_DEVICE_INFO cameraInfo)
@@ -173,10 +193,48 @@ namespace Camera
         public bool Disconnect()
         {
             nRet = myCamera.MV_CC_CloseDevice_NET();
+
             if (MyCamera.MV_OK != nRet)
             {
                 return false;
             }
+
+            return true;
+        }
+
+        public bool Create()
+        {
+            int nRet = myCamera.MV_CC_CreateDevice_NET(ref cameraInfo);
+            if (MyCamera.MV_OK != nRet)
+            {
+                return false;
+            }
+
+            if (!Connect())
+            {
+                myCamera.MV_CC_DestroyDevice_NET();
+                return false;
+            }
+
+            IsCreate = true;
+            return true;
+        }
+
+        public bool Destroy()
+        {
+            if (!Disconnect())
+            {
+                return false;
+            }
+
+            nRet = myCamera.MV_CC_DestroyDevice_NET();
+
+            if (MyCamera.MV_OK != nRet)
+            {
+                return false;
+            }
+
+            IsCreate = false;
             return true;
         }
 
@@ -184,6 +242,7 @@ namespace Camera
         {
             MyCamera.MVCC_FLOATVALUE stParam = new MyCamera.MVCC_FLOATVALUE();
             nRet = myCamera.MV_CC_GetFloatValue_NET("ExposureTime", ref stParam);
+
             if (MyCamera.MV_OK == nRet)
             {
                 ExposureTime = stParam.fCurValue.ToString("F1");
@@ -203,7 +262,6 @@ namespace Camera
         }
 
         public string SetParam()
-        
         {
             try
             {
@@ -217,7 +275,7 @@ namespace Camera
             }
 
             myCamera.MV_CC_SetEnumValue_NET("ExposureAuto", 0);
-            int nRet = myCamera.MV_CC_SetFloatValue_NET("ExposureTime", float.Parse(ExposureTime));
+            nRet = myCamera.MV_CC_SetFloatValue_NET("ExposureTime", float.Parse(ExposureTime));
             if (nRet != MyCamera.MV_OK)
             {
                 return "Set Exposure Time Fail!";
@@ -234,6 +292,53 @@ namespace Camera
             if (nRet != MyCamera.MV_OK)
             {
                 return "Set Frame Rate Fail!";
+            }
+
+            return "Parametrs Setter";
+        }
+
+        public void GetAutoExposure()
+        {
+            MyCamera.MVCC_INTVALUE getAutoExposure = new MyCamera.MVCC_INTVALUE();
+
+            nRet = myCamera.MV_CC_GetAutoExposureTimeUpper_NET(ref getAutoExposure);
+            if (MyCamera.MV_OK == nRet)
+            {
+                TimeUpper = getAutoExposure.nCurValue.ToString("F1");
+
+            }
+
+            nRet = myCamera.MV_CC_GetAutoExposureTimeLower_NET(ref getAutoExposure);
+            if (MyCamera.MV_OK == nRet)
+            {
+                TimeLower = getAutoExposure.nCurValue.ToString("F1");
+            }
+        }
+
+
+        public string SetAutoExposure()
+        {
+            try
+            {
+                uint.Parse(TimeLower);
+                uint.Parse(TimeUpper);
+            }
+            catch
+            {
+                return "Please enter correct type!";
+            }
+
+            nRet = myCamera.MV_CC_SetAutoExposureTimeLower_NET(uint.Parse(TimeLower));
+
+            if (nRet != MyCamera.MV_OK)
+            {
+                return "Set Auto Exposure TimeMin Fail!";
+            }
+            myCamera.MV_CC_SetAutoExposureTimeUpper_NET(uint.Parse(TimeUpper));
+
+            if (nRet != MyCamera.MV_OK)
+            {
+                return "Set Auto Exposure TimeMax Fail!";
             }
 
             return "Parametrs Setter";
