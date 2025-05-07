@@ -23,30 +23,12 @@ namespace Camera
         private Thread m_hReceiveThread = null;
         private bool isCreate = false;
         private bool isGrab = false;
-        private string exposureTime;
-        private string gain;
-        private string frameRate;
-        private string timeLower;
-        private string timeUpper;
+        private float exposureTime;
+        private float gain;
+        private float frameRate;
+        private uint timeLower;
+        private uint timeUpper;
 
-        public string TimeLower
-        {
-            get { return timeLower; }
-            set 
-            {
-                timeLower = value; 
-                OnPropertyChanged();
-            }
-        }
-        public string TimeUpper
-        {
-            get { return timeUpper; }
-            set
-            {
-                timeUpper = value;
-                OnPropertyChanged();
-            }
-        }
         public string SerialNumber { get; private set; }
         public string Name { get; private set; }
         public string Ip { get; private set; }
@@ -80,7 +62,7 @@ namespace Camera
                 OnPropertyChanged();
             }
         }
-        public string ExposureTime
+        public float ExposureTime
         {
             get => exposureTime;
 
@@ -90,7 +72,7 @@ namespace Camera
                 OnPropertyChanged();
             }
         }
-        public string Gain
+        public float Gain
         {
             get => gain;
 
@@ -100,7 +82,7 @@ namespace Camera
                 OnPropertyChanged();
             }
         }
-        public string FrameRate
+        public float FrameRate
         {
             get => frameRate;
 
@@ -110,7 +92,24 @@ namespace Camera
                 OnPropertyChanged();
             }
         }
-
+        public uint TimeLower
+        {
+            get { return timeLower; }
+            set
+            {
+                timeLower = value;
+                OnPropertyChanged();
+            }
+        }
+        public uint TimeUpper
+        {
+            get { return timeUpper; }
+            set
+            {
+                timeUpper = value;
+                OnPropertyChanged();
+            }
+        }
         public event PropertyChangedEventHandler? PropertyChanged;
 
         public CameraPerformance(MyCamera.MV_CC_DEVICE_INFO cameraInfo)
@@ -245,50 +244,39 @@ namespace Camera
 
             if (MyCamera.MV_OK == nRet)
             {
-                ExposureTime = stParam.fCurValue.ToString("F1");
+                ExposureTime = stParam.fCurValue;
             }
 
             nRet = myCamera.MV_CC_GetFloatValue_NET("Gain", ref stParam);
             if (MyCamera.MV_OK == nRet)
             {
-                Gain = stParam.fCurValue.ToString("F1");
+                Gain = stParam.fCurValue;
             }
 
             nRet = myCamera.MV_CC_GetFloatValue_NET("ResultingFrameRate", ref stParam);
             if (MyCamera.MV_OK == nRet)
             {
-                FrameRate = stParam.fCurValue.ToString("F1");
+                FrameRate = stParam.fCurValue;
             }
         }
 
         public string SetParam()
         {
-            try
-            {
-                float.Parse(ExposureTime);
-                float.Parse(Gain);
-                float.Parse(FrameRate);
-            }
-            catch
-            {
-                return "Please enter correct type!";
-            }
-
             myCamera.MV_CC_SetEnumValue_NET("ExposureAuto", 0);
-            nRet = myCamera.MV_CC_SetFloatValue_NET("ExposureTime", float.Parse(ExposureTime));
+            nRet = myCamera.MV_CC_SetFloatValue_NET("ExposureTime", ExposureTime);
             if (nRet != MyCamera.MV_OK)
             {
                 return "Set Exposure Time Fail!";
             }
 
             myCamera.MV_CC_SetEnumValue_NET("GainAuto", 0);
-            nRet = myCamera.MV_CC_SetFloatValue_NET("Gain", float.Parse(Gain));
+            nRet = myCamera.MV_CC_SetFloatValue_NET("Gain",Gain);
             if (nRet != MyCamera.MV_OK)
             {
                 return "Set Gain Fail!";
             }
 
-            nRet = myCamera.MV_CC_SetFloatValue_NET("AcquisitionFrameRate", float.Parse(FrameRate));
+            nRet = myCamera.MV_CC_SetFloatValue_NET("AcquisitionFrameRate",FrameRate);
             if (nRet != MyCamera.MV_OK)
             {
                 return "Set Frame Rate Fail!";
@@ -304,37 +292,26 @@ namespace Camera
             nRet = myCamera.MV_CC_GetAutoExposureTimeUpper_NET(ref getAutoExposure);
             if (MyCamera.MV_OK == nRet)
             {
-                TimeUpper = getAutoExposure.nCurValue.ToString("F1");
-
+                TimeUpper = getAutoExposure.nCurValue;
             }
 
             nRet = myCamera.MV_CC_GetAutoExposureTimeLower_NET(ref getAutoExposure);
             if (MyCamera.MV_OK == nRet)
             {
-                TimeLower = getAutoExposure.nCurValue.ToString("F1");
+                TimeLower = getAutoExposure.nCurValue;
             }
         }
 
 
         public string SetAutoExposure()
         {
-            try
-            {
-                uint.Parse(TimeLower);
-                uint.Parse(TimeUpper);
-            }
-            catch
-            {
-                return "Please enter correct type!";
-            }
-
-            nRet = myCamera.MV_CC_SetAutoExposureTimeLower_NET(uint.Parse(TimeLower));
+            nRet = myCamera.MV_CC_SetAutoExposureTimeLower_NET(TimeLower);
 
             if (nRet != MyCamera.MV_OK)
             {
                 return "Set Auto Exposure TimeMin Fail!";
             }
-            myCamera.MV_CC_SetAutoExposureTimeUpper_NET(uint.Parse(TimeUpper));
+            myCamera.MV_CC_SetAutoExposureTimeUpper_NET(TimeUpper);
 
             if (nRet != MyCamera.MV_OK)
             {
