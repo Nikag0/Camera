@@ -17,19 +17,18 @@ namespace Camera
     public class CameraManager
     {
         private MyCamera.MV_CC_DEVICE_INFO_LIST findDeviceList = new MyCamera.MV_CC_DEVICE_INFO_LIST();
-        private List<string> nameCamers = new List<string>();
-        private ObservableCollection<CameraPerformance> creatingCamersCollection = new ObservableCollection<CameraPerformance>();
         private CameraPerformance cameraCreate;
-        private ObservableCollection<string> nameCreateCamers = new ObservableCollection<string>(); 
+        private ObservableCollection<string> nameFindCamers = new ObservableCollection<string>();
+        private ObservableCollection<string> nameCreateCamers = new ObservableCollection<string>();
+        private ObservableCollection<CameraPerformance> creatingCamersCollection = new ObservableCollection<CameraPerformance>();
 
+        public ObservableCollection<string> NameFindCamers { get => nameFindCamers; private set { nameFindCamers = value; } }
+        public ObservableCollection<string> NameCreateCamers { get => nameCreateCamers; private set { nameCreateCamers = value; } }
         public ObservableCollection<CameraPerformance> CreatingCamersCollection { get => creatingCamersCollection; private set { creatingCamersCollection = value; } }
-        public MyCamera.MV_CC_DEVICE_INFO_LIST FindDeviceList { get => findDeviceList; private set { findDeviceList = value; } }
-        public List<string> NameCamers { get => nameCamers; set { nameCamers = value; } }
-        public ObservableCollection<string> NameCreateCamers { get => nameCreateCamers; set { nameCreateCamers = value; } }
 
         public bool SearchСamera()
         {
-            nameCamers.Clear();
+            NameFindCamers.Clear();
 
             int nRet = MyCamera.MV_CC_EnumDevices_NET(MyCamera.MV_GIGE_DEVICE, ref findDeviceList);
 
@@ -48,16 +47,16 @@ namespace Camera
 
                     if ((gigeInfo.chUserDefinedName.Length > 0) && (gigeInfo.chUserDefinedName[0] != '\0'))
                     {
-                        nameCamers.Add("GEV: " + gigeInfo.chManufacturerName + " " + gigeInfo.chModelName + " (" + gigeInfo.chSerialNumber + ")");
+                        NameFindCamers.Add("GEV: " + gigeInfo.chManufacturerName + " " + gigeInfo.chModelName + " (" + gigeInfo.chSerialNumber + ")");
                     }
                     else
                     {
-                        nameCamers.Add("GEV: " + gigeInfo.chManufacturerName + " " + gigeInfo.chModelName + " (" + gigeInfo.chSerialNumber + ")");
+                        NameFindCamers.Add("GEV: " + gigeInfo.chManufacturerName + " " + gigeInfo.chModelName + " (" + gigeInfo.chSerialNumber + ")");
                     }
                 }
             }
 
-            if (nameCamers.Count == 0)
+            if (NameFindCamers.Count == 0)
             {
                 return false;
             }
@@ -82,7 +81,7 @@ namespace Camera
 
                     if (gigeInfo.chSerialNumber == serialNumber)
                     {
-                        creatingCamersCollection.Add(cameraCreate = new CameraPerformance(cameraInfo));
+                        CreatingCamersCollection.Add(cameraCreate = new CameraPerformance(cameraInfo));
 
                         if (!cameraCreate.Create())
                         {
@@ -103,7 +102,7 @@ namespace Camera
 
         public bool DestroyCamera(string serialNumber)
         {
-            CameraPerformance cameraToDestroy = creatingCamersCollection.FirstOrDefault(camera => camera.SerialNumber == serialNumber);
+            CameraPerformance cameraToDestroy = CreatingCamersCollection.FirstOrDefault(camera => camera.SerialNumber == serialNumber);
 
             if (cameraToDestroy.IsGrab == true)
             {
@@ -115,8 +114,8 @@ namespace Camera
                 return false;
             }
 
-            nameCreateCamers.Remove(cameraToDestroy.Name);
-            creatingCamersCollection.Remove(cameraToDestroy);
+            NameCreateCamers.Remove(cameraToDestroy.Name);
+            CreatingCamersCollection.Remove(cameraToDestroy);
             return true;
         }
     }

@@ -33,57 +33,14 @@ namespace Camera
         private string nameSelectDevice;
         private static readonly Regex filterRegex = new Regex(@"\(([A-Z]{2}\d{7})\)");
         private string serialNumber;
-        private bool areAnyDevices = false;
-        private bool isCreate = false;
-        private bool isGrab = false;
-        private ObservableCollection<string> nameCreateCamera { get => cameraManager.NameCreateCamers; }
 
-
-
+        public CameraManager CameraManager { get => cameraManager; }
         public CameraPerformance SelectCamera
         {
             get { return selectCamera; }
             set
             {
                 selectCamera = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public ObservableCollection<string> NameCreateCamera
-        {
-            get { return nameCreateCamera; }
-            set 
-            {
-                OnPropertyChanged();
-            }
-        }
-
-        public bool IsGrab
-        {
-            get =>  isGrab;
-            set
-            {
-                isGrab = value;
-                OnPropertyChanged();
-            }
-        }
-        public bool IsCreate
-        {
-            get => isCreate;
-            set
-            {
-                isCreate = value;
-                OnPropertyChanged();
-            }
-        }
-        public bool AreAnyDevices
-        {
-            get => areAnyDevices;
-
-            set 
-            {
-                areAnyDevices = value;
                 OnPropertyChanged();
             }
         }
@@ -99,15 +56,6 @@ namespace Camera
                 CameraSwitch();
             }
         }      
-        public List<string> NameCamers
-        {
-            get => cameraManager.NameCamers;
-            set
-            {
-                cameraManager.NameCamers = value;
-                OnPropertyChanged();
-            }
-        }
         public ICommand SearchDeviceCommand { get; }
         public ICommand CreateDeviceCommand { get; }
         public ICommand DestroyDeviceCommand { get; }
@@ -115,6 +63,7 @@ namespace Camera
         public ICommand StopGrabCommand { get; }
         public ICommand GetParamCommand { get; }
         public ICommand SetParamCommand { get; }
+        public ICommand OnAutoExposureCommand { get; }
         public ICommand GetAutoExposureCommand { get; }
         public ICommand SetAutoExposureCommand { get; }
         public string Feedback
@@ -137,6 +86,7 @@ namespace Camera
             StopGrabCommand = new DelegateCommands(p => StopGrab());
             GetParamCommand = new DelegateCommands(propa => GetParam());
             SetParamCommand = new DelegateCommands(propa => SetParam());
+            OnAutoExposureCommand = new DelegateCommands(propa => OnAutoExposure());
             GetAutoExposureCommand = new DelegateCommands(propa => GetAutoExposure());
             SetAutoExposureCommand = new DelegateCommands(propa => SetAutoExposure());
         }
@@ -146,14 +96,11 @@ namespace Camera
             if (!cameraManager.SearchСamera())
             {
                 Feedback = $"No device";
-                AreAnyDevices = false;
                 return;
             }
 
-            AreAnyDevices = true;
             Feedback = $"Devices are discovered";
         }
-
 
         private void CreateDevice()
         {
@@ -169,7 +116,6 @@ namespace Camera
                 return;
             }
 
-
             CameraSwitch();
             Feedback = "The camera is created";
             SelectCamera.GetParam();
@@ -182,6 +128,7 @@ namespace Camera
                 Feedback = "The error of destroying a camera";
                 return;
             }
+
             Feedback = "The camera is destroyed";
         }
 
@@ -217,9 +164,21 @@ namespace Camera
         {
             Feedback = SelectCamera.SetParam();
         } 
+
         private void GetParam()
         {
             SelectCamera.GetParam();
+        }
+
+        private void OnAutoExposure()
+        {
+            if (SelectCamera.OnAutoExposureTime())
+            {
+                Feedback = "Auto Exposure Time On";
+                return;
+            }
+
+            Feedback = "Auto Exposure Time Off";
         }
 
         private void GetAutoExposure()
@@ -250,7 +209,9 @@ namespace Camera
         private string GetSerialNumber(string input)
         {
             if (string.IsNullOrEmpty(input))
+            {
                 return string.Empty;
+            }
 
             var match = filterRegex.Match(input);
             return match.Success ? match.Groups[1].Value : "Не найден";

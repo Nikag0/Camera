@@ -14,15 +14,16 @@ namespace Camera
 {
     public class CameraPerformance : INotifyPropertyChanged
     {
-        private BitmapSource inImg;
         private MyCamera myCamera = new MyCamera();
         private MyCamera.MV_CC_DEVICE_INFO cameraInfo = new MyCamera.MV_CC_DEVICE_INFO();
+        private Thread m_hReceiveThread = null;
+        private int nRet;
         private IPAddress ipAddress;
         private byte[] ipBytes;
-        private int nRet;
-        private Thread m_hReceiveThread = null;
         private bool isCreate = false;
         private bool isGrab = false;
+        private bool isAutoExposure = false;
+        private BitmapSource inImg;
         private float exposureTime;
         private float gain;
         private float frameRate;
@@ -52,11 +53,21 @@ namespace Camera
                 OnPropertyChanged();
             }
         }
+        public bool IsAutoExposure
+        {
+            get => isAutoExposure;
+
+            private set
+            {
+                isAutoExposure = value;
+                OnPropertyChanged();
+            }
+        }
         public BitmapSource InImg 
         { 
             get => inImg; 
 
-            set 
+            private set 
             { 
                 inImg = value;
                 OnPropertyChanged();
@@ -125,7 +136,6 @@ namespace Camera
 
         private void ReceiveThreadProcess()
         {
-
             MyCamera.MV_FRAME_OUT stFrameInfo = new MyCamera.MV_FRAME_OUT();
             MyCamera.MV_DISPLAY_FRAME_INFO stDisplayInfo = new MyCamera.MV_DISPLAY_FRAME_INFO();
             MyCamera.MV_DISPLAY_FRAME_INFO_EX stDisplayInfoEx = new MyCamera.MV_DISPLAY_FRAME_INFO_EX();
@@ -153,8 +163,9 @@ namespace Camera
         public bool StartGrab()
         {
             IsGrab = true;
-            m_hReceiveThread = new Thread(ReceiveThreadProcess);
-            m_hReceiveThread.Start();
+            //m_hReceiveThread = new Thread(ReceiveThreadProcess);
+            //m_hReceiveThread.Start();
+            Task.Run(() => ReceiveThreadProcess());
 
             nRet = myCamera.MV_CC_StartGrabbing_NET();
             if (MyCamera.MV_OK != nRet)
@@ -187,6 +198,7 @@ namespace Camera
             {
                 return false;
             }
+
             return true;
         }
         public bool Disconnect()
@@ -285,6 +297,26 @@ namespace Camera
             return "Parametrs Setter";
         }
 
+        public bool OnAutoExposureTime()
+        {
+            if (IsAutoExposure)
+            {
+                OffAutoExposureTime();
+                return false;
+            }
+
+            myCamera.MV_CC_SetEnumValue_NET("ExposureAuto", 2);
+            GetAutoExposure();
+            IsAutoExposure = true;
+            return true;
+        }
+
+        public void OffAutoExposureTime()
+        {
+            myCamera.MV_CC_SetEnumValue_NET("ExposureAuto", 0);
+            IsAutoExposure = false;
+        }
+
         public void GetAutoExposure()
         {
             MyCamera.MVCC_INTVALUE getAutoExposure = new MyCamera.MVCC_INTVALUE();
@@ -301,7 +333,6 @@ namespace Camera
                 TimeLower = getAutoExposure.nCurValue;
             }
         }
-
 
         public string SetAutoExposure()
         {

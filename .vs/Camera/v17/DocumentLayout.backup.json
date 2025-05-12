@@ -36,10 +36,11 @@
               "RelativeDocumentMoniker": "Camera\\CameraManager.cs",
               "ToolTip": "D:\\Camera\\Camera\\CameraManager.cs",
               "RelativeToolTip": "Camera\\CameraManager.cs",
-              "ViewState": "AgIAAEQAAAAAAAAAAAAAAGUAAAAIAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAeAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-04-22T07:44:07.423Z",
-              "IsPinned": true
+              "IsPinned": true,
+              "EditorCaption": ""
             },
             {
               "$type": "Bookmark",
@@ -69,7 +70,7 @@
               "RelativeDocumentMoniker": "Camera\\CameraPerformance.cs",
               "ToolTip": "D:\\Camera\\Camera\\CameraPerformance.cs",
               "RelativeToolTip": "Camera\\CameraPerformance.cs",
-              "ViewState": "AgIAAPkAAAAAAAAAAAAqwDMBAAAMAAAAAAAAAA==",
+              "ViewState": "AgIAAKQAAAAAAAAAAAAqwLcAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-04-25T07:43:26.896Z",
               "EditorCaption": ""
@@ -82,9 +83,10 @@
               "RelativeDocumentMoniker": "Camera\\ViewModelMainWindow.cs",
               "ToolTip": "D:\\Camera\\Camera\\ViewModelMainWindow.cs",
               "RelativeToolTip": "Camera\\ViewModelMainWindow.cs",
-              "ViewState": "AgIAAFkAAAAAAAAAAIAzwOEAAAAIAAAAAAAAAA==",
+              "ViewState": "AgIAAEIAAAAAAAAAAIA0wFkAAABCAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-04-11T08:20:30.343Z"
+              "WhenOpened": "2025-04-11T08:20:30.343Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -95,7 +97,7 @@
               "ToolTip": "D:\\Camera\\Camera\\MainWindow.xaml",
               "RelativeToolTip": "Camera\\MainWindow.xaml",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2025-04-11T08:08:04.725Z",
+              "WhenOpened": "2025-05-07T11:16:48.411Z",
               "EditorCaption": ""
             }
           ]
